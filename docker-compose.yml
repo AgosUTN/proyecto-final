@@ -1,0 +1,104 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT}:3000"
+    environment:
+      NODE_ENV: ${APP_ENV}
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DS_API_URL: http://ds-api:8000
+    command: [
+        "./node_modules/.bin/nodemon",
+        "-L",
+        "--watch",
+        "src",
+        "--ext",
+        "ts",
+        "--exec",
+        "tsc && node dist/index.js",
+      ] # DEV
+    volumes: # DEV
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  ds-api:
+    build: ./ds-api
+    restart: unless-stopped
+    ports:
+      - "${DS_API_PORT}:8000"
+    environment:
+      APP_ENV: ${APP_ENV}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+    command: [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ] # DEV
+    volumes: # DEV
+      - ./ds-api:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      target: build # DEV: usa la imagen con node en vez de nginx
+    command: [
+        "./node_modules/.bin/ng",
+        "serve",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "4200",
+        "--poll",
+        "2000",
+      ] # DEV
+    ports:
+      - "${FRONTEND_PORT}:4200" # DEV (en producción: "${FRONTEND_PORT}:80")
+    volumes: # DEV
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - ds-api
+
+volumes:
+  mysql_data:
