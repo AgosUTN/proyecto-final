@@ -8,7 +8,7 @@ implementarla.
 
 | Dato | Valor |
 |---|---|
-| Versión | 1.1 — 14/11/2026 (alcance ampliado al modelo de dominio completo) |
+| Versión | 1.2 — 14/11/2026 (registro distribuido de features) |
 | Framework | Angular 22 (standalone, zoneless, signals) |
 | Guía visual obligatoria | `GUIA_DISENO_CHAMPAGNE_FLORENTINA.md` (paleta 06 · Petróleo & Rosa Viejo, tipografía F · Catálogo) |
 | Referencia analizada | [AgosUTN/App-web](https://github.com/AgosUTN/App-web) (`Front_V2`, Angular 21) |
@@ -168,7 +168,7 @@ Cada mejora cita el archivo de App-web que la motiva.
 | 2 | Uso de `cdr.detectChanges()` y `markForCheck()` en casi todos los componentes | `libros-read.ts`, `libros-create.ts`, `prestamos-create.ts` | Estado en `signal` y `computed`; lecturas con `httpResource`. Angular 22 es zoneless por defecto, así que esta mejora es obligatoria |
 | 3 | Herencia entre componentes: `LibrosUpdate extends LibrosCreate` redefine el formulario y usa el template del padre | `libros-update.ts`, `basePagedComponent.ts` | Composición: un `form-page` por entidad con modo alta o edición según la ruta; el estado de tabla es una función componible |
 | 4 | El guard confía en `localStorage('rol')`, editable por el usuario; parpadeo al vencer el token | `auth.guard.ts`, `auth-service.ts` | `AuthStore` con el usuario en un signal, cargado desde `/api/auth/me` al iniciar; permisos por acción |
-| 5 | Roles repetidos en las rutas, en `MenuService` y en `isAdmin()`; íconos como strings de SVG | `menu-service.ts`, `app.routes.ts` | Un único `nav.config.ts` del que salen menú, permisos y migas |
+| 5 | Roles repetidos en las rutas, en `MenuService` y en `isAdmin()`; íconos como strings de SVG | `menu-service.ts`, `app.routes.ts` | Cada feature declara sus rutas, ítems de menú y permisos en un solo archivo (`<feature>.feature.ts`); `core` los reúne. Sin listas repetidas ni archivos centrales que todos editen |
 | 6 | `shared` importa diálogos de las features | `dialog-service.ts` | Reglas de dependencia explícitas y verificadas con ESLint (sección 5.3) |
 | 7 | Cada componente repite su `switch (status)` para traducir errores | `libros-create.ts`, `step2-component.ts` | Catálogo único `code → mensaje` y helper `applyServerErrors(form, error)` |
 | 8 | Errores 0, 400 y 500 redirigen a `/error/:code` | `error.interceptor.ts` | Aviso dentro del panel afectado con acción «Reintentar» (guía 7.15); página de error solo para rutas inexistentes o sin permiso |
@@ -209,14 +209,15 @@ frontend/src/
 ├─ styles.scss                 ← importa fuentes (@fontsource) y styles/
 └─ app/
    ├─ app.config.ts
-   ├─ app.routes.ts            ← solo loadChildren y rutas de error
+   ├─ app.features.ts          ← lista de features (una línea por feature)
+   ├─ app.routes.ts            ← arma las rutas desde app.features.ts, más las rutas de error
    │
    ├─ core/                    ← singletons; sin pantallas de negocio
    │  ├─ auth/                 auth.store.ts · auth.api.ts · auth.guard.ts · permission.guard.ts
-   │  │                        permisos.ts · can.directive.ts
+   │  │                        roles.ts · permisos.registry.ts · can.directive.ts
    │  ├─ http/                 api-base.interceptor.ts · credentials.interceptor.ts · error.interceptor.ts
    │  │                        api.types.ts · api-error.ts · error-catalog.ts
-   │  ├─ navigation/           nav.config.ts · breadcrumbs.ts
+   │  ├─ navigation/           feature.types.ts · navegacion.ts · breadcrumbs.ts
    │  ├─ formatters/           ars.pipe.ts · porcentaje.pipe.ts · fecha.pipe.ts (es-AR, guía 16.2)
    │  ├─ estados/              estados.ts (estado backend → texto y variante, guía 1.8)
    │  └─ ui-state/             breakpoints.ts · notificaciones.service.ts
@@ -269,6 +270,7 @@ Estructura interna de cada feature:
 
 ```
 features/<feature>/
+├─ <feature>.feature.ts       rutas, ítems de menú y permisos de la feature (registro distribuido)
 ├─ <feature>.routes.ts
 ├─ data-access/
 │  ├─ <feature>.api.ts         llamadas HTTP tipadas
@@ -302,29 +304,75 @@ features/<feature>/
 - Aliases en `tsconfig.json`: `@core/*`, `@shared/*`, `@features/*`, `@layout/*`. No se usan rutas `../../../`.
 - Verificación automática con `eslint-plugin-boundaries`; una violación hace fallar el lint.
 
-### 5.4 Rutas
+### 5.4 Registro distribuido de features
+
+Cada feature se describe a sí misma en un único archivo. Así, sumar una feature no obliga a editar listas de rutas,
+menú o permisos que el resto del equipo también modifica: el único archivo compartido es `app.features.ts`, con una
+línea por feature, y sus conflictos son triviales.
 
 ```ts
-// app.routes.ts
+// core/navigation/feature.types.ts
+export interface FeatureDef {
+  ruta: string;                                         // segmento base: 'inventario/stock'
+  rutas: () => Promise<Routes>;                         // carga diferida (loadChildren)
+  nav?: NavItem[];                                      // ítems del menú lateral
+  permisos: Partial<Record<Permiso, RolEmpleado[]>>;    // qué roles reciben cada permiso de la feature
+  publica?: boolean;                                    // true en la tienda: usa el shell público
+}
+
+export interface NavItem {
+  ruta: string;
+  etiqueta: string;
+  icono: LucideIconName;
+  grupo: 'Ventas' | 'Inventario' | 'Compras' | 'Análisis' | 'Configuración';
+  permiso: Permiso;
+  orden: number;
+}
+```
+
+```ts
+// features/inventario/stock/stock.feature.ts
+export const stockFeature: FeatureDef = {
+  ruta: 'inventario/stock',
+  rutas: () => import('./stock.routes').then((m) => m.default),
+  nav: [
+    { ruta: '/inventario/stock', etiqueta: 'Stock y variantes', icono: 'package', grupo: 'Inventario', permiso: 'stock:leer', orden: 10 },
+  ],
+  permisos: {
+    'stock:leer': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO', 'ADMINISTRATIVO'],
+    'stock:ajustar': ['GERENTE', 'OPERARIO_DEPOSITO'],
+  },
+};
+```
+
+```ts
+// app.features.ts — único archivo compartido: una línea por feature
+export const FEATURES: FeatureDef[] = [
+  authFeature,
+  panelFeature,
+  mostradorFeature,
+  stockFeature,
+  productosFeature,
+  // …
+];
+```
+
+```ts
+// app.routes.ts — se arma a partir de FEATURES
 export const routes: Routes = [
-  { path: 'login', loadChildren: () => import('@features/auth/auth.routes') },
+  ...FEATURES.filter((f) => f.publica).map((f) => ({ path: f.ruta, component: ShellPublico, loadChildren: f.rutas })),
   {
     path: '',
     component: Shell,
     canActivate: [authGuard],
-    children: [
-      { path: 'ventas/mostrador', loadChildren: () => import('@features/ventas/mostrador/mostrador.routes') },
-      { path: 'ventas', loadChildren: () => import('@features/ventas/historial/historial.routes') },
-      { path: 'inventario/productos', loadChildren: () => import('@features/inventario/productos/productos.routes') },
-      { path: 'inventario/stock', loadChildren: () => import('@features/inventario/stock/stock.routes') },
-      { path: 'config/usuarios', loadChildren: () => import('@features/config/usuarios/usuarios.routes') },
-      { path: '', pathMatch: 'full', redirectTo: 'inventario/stock' },
-    ],
+    children: FEATURES.filter((f) => !f.publica).map((f) => ({ path: f.ruta, loadChildren: f.rutas })),
   },
   { path: 'sin-permiso', loadComponent: () => import('@layout/errores/sin-permiso-page') },
   { path: '**', loadComponent: () => import('@layout/errores/no-encontrado-page') },
 ];
 ```
+
+Las rutas internas de cada feature siguen en su `<feature>.routes.ts`:
 
 ```ts
 // features/inventario/stock/stock.routes.ts
@@ -338,28 +386,10 @@ export default [
 ] satisfies Routes;
 ```
 
-### 5.5 Navegación: fuente única
+### 5.5 Navegación
 
-`nav.config.ts` define cada ítem una sola vez. De ahí salen el menú lateral (filtrado por permisos), las migas y
-la documentación de permisos.
-
-```ts
-export interface NavItem {
-  ruta: string;
-  etiqueta: string;
-  icono: LucideIconName;
-  grupo: 'Ventas' | 'Inventario' | 'Configuración';
-  permiso: Permiso;
-}
-
-export const NAV: NavItem[] = [
-  { ruta: '/ventas/mostrador', etiqueta: 'Venta en mostrador', icono: 'monitor', grupo: 'Ventas', permiso: 'ventas:registrar' },
-  { ruta: '/ventas', etiqueta: 'Ventas', icono: 'receipt', grupo: 'Ventas', permiso: 'ventas:leer' },
-  { ruta: '/inventario/stock', etiqueta: 'Stock y variantes', icono: 'package', grupo: 'Inventario', permiso: 'stock:leer' },
-  { ruta: '/inventario/productos', etiqueta: 'Productos', icono: 'tag', grupo: 'Inventario', permiso: 'productos:leer' },
-  { ruta: '/config/usuarios', etiqueta: 'Usuarios y roles', icono: 'users', grupo: 'Configuración', permiso: 'usuarios:administrar' },
-];
-```
+`core/navigation/navegacion.ts` reúne los `nav` de todas las features, los ordena por grupo y `orden`, y los filtra
+según los permisos del usuario. De ahí salen el menú lateral y las migas. No existe una lista central de ítems.
 
 ### 5.6 Seguridad: autenticación y permisos
 
@@ -384,8 +414,9 @@ export class AuthStore {
 }
 ```
 
-**Permisos por acción.** Los componentes y guards preguntan por permisos, no por roles. El mapa rol → permisos
-vive en `core/auth/permisos.ts` y es el único lugar que conoce los roles.
+**Permisos por acción.** Los componentes y guards preguntan por permisos, no por roles. Cada feature declara en
+su `<feature>.feature.ts` qué roles reciben sus permisos; `core/auth/permisos.registry.ts` los reúne al iniciar.
+La tabla siguiente es la referencia que esas declaraciones deben respetar.
 
 Roles de empleados:
 
@@ -644,9 +675,9 @@ features/inventario/stock/
 
 - [ ] Carpeta en `features/` con la estructura de la sección 5.2.
 - [ ] `<feature>.routes.ts` con `export default` y `permissionGuard` en cada ruta.
-- [ ] Ruta registrada con `loadChildren` en `app.routes.ts`.
-- [ ] Ítem agregado en `nav.config.ts` con su permiso.
-- [ ] Permisos nuevos agregados en `permisos.ts` y en la matriz de la sección 5.6.
+- [ ] `<feature>.feature.ts` con rutas, ítems de menú y permisos por rol.
+- [ ] Feature agregada en `app.features.ts` (una línea).
+- [ ] Permisos nuevos reflejados en la tabla de la sección 5.6.
 - [ ] DTOs basados en los tipos generados del backend.
 - [ ] `.api.ts` sin lógica de pantalla; las `pages` no llaman a `HttpClient` directamente.
 - [ ] Estados de carga (esqueleto), vacío y error con «Reintentar» en cada panel.
