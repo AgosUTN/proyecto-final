@@ -8,7 +8,7 @@ implementarla.
 
 | Dato | Valor |
 |---|---|
-| Versión | 1.0 — 14/11/2026 |
+| Versión | 1.1 — 14/11/2026 (alcance ampliado al modelo de dominio completo) |
 | Framework | Angular 22 (standalone, zoneless, signals) |
 | Guía visual obligatoria | `GUIA_DISENO_CHAMPAGNE_FLORENTINA.md` (paleta 06 · Petróleo & Rosa Viejo, tipografía F · Catálogo) |
 | Referencia analizada | [AgosUTN/App-web](https://github.com/AgosUTN/App-web) (`Front_V2`, Angular 21) |
@@ -57,23 +57,27 @@ sociales, y control de stock en papel. Los problemas que el sistema resuelve (En
 
 ### 1.3 Alcance de esta entrega
 
-**Frontend y backend propios, sin integraciones externas**, con una única excepción: **Mercado Pago, que se
-incorpora al final**.
+**El modelo de dominio completo (36 clases), sin integraciones externas**, con una única excepción: **Mercado
+Pago, que se incorpora al final**. El detalle por proceso, el orden de construcción y la división del trabajo
+están en [`docs/plan-de-desarrollo.md`](../../docs/plan-de-desarrollo.md).
 
-| Módulo | Incluido | Casos de uso (Etapa 3) |
-|---|:-:|---|
-| Seguridad: inicio de sesión, usuarios y roles | Sí | Iniciar sesión, registrar usuario, asignar rol |
-| Stock: productos, variantes, precios, ajustes | Sí | CUU9.1, CUU9.2, CUU9.4, CUU9.5 |
-| Venta en mostrador (POS) | Sí | CUU1.1, CUU1.2, CUU1.3 |
-| Cobro con Mercado Pago | Al final | Parte de CUU1.2 (medios con `requiere_procesamiento`) |
-| Mercado Libre, ARCA, OCR, Andreani, Tiendanube, chatbot | No | Quedan como features futuras |
-| Panel del día, predicción de demanda (FastAPI) | No | Quedan como features futuras |
+| Módulo | Casos de uso (Etapa 3) |
+|---|---|
+| Seguridad: usuarios, roles, acceso de empleados y clientes | — |
+| Catálogo: categorías, productos, variantes, precios, descuentos | CUU9.1 a 9.5 |
+| Stock: consulta, movimientos, ajustes, sin rotación | CUU1.1, CUU9.5, CUU8.1, CUU8.2 |
+| Ventas: mostrador, redes sociales, mayoristas, cuotas, comprobantes | CUU1.1 a 1.3, CUU12.1, CUU7.1 a 7.5 |
+| Tienda online propia (rutas públicas) y cuenta del cliente | CUU2.1, CUU2.3 |
+| Pedidos y envíos | CUU2.2 |
+| Compras: órdenes, recepción, compromisos y pagos a proveedores | CUU4.1 a 4.4, CUU5.1 a 5.3, CUU6.1 a 6.3 |
+| Devoluciones | CUU10.1 a 10.4 |
+| Dashboard, pronóstico de demanda (`ds-api`), auditoría, reportes | CUU11.1, CUU11.2 |
+| Cobro y reintegro con Mercado Pago | CUU1.2, CUU2.1, CUU10.3 |
 
-La estructura de carpetas ya contempla las features futuras (sección 5.2) para que sumarlas no implique
-reorganizar el proyecto.
-
-Mientras no exista integración con ARCA, el comprobante de CUU1.3 se genera internamente (sin CAE). La pantalla
-debe quedar preparada para mostrar el estado de autorización cuando la integración se agregue.
+Fuera de alcance: Mercado Libre, ARCA, OCR, Andreani, Tiendanube, servicio de correo y chatbot. Sus funciones se
+resuelven dentro del sistema: comprobantes sin CAE, documentos cargados a mano, seguimiento de envíos manual y
+avisos visibles en la aplicación en lugar de correos. Las pantallas que muestran comprobantes quedan preparadas
+para mostrar el estado de autorización si más adelante se integra ARCA.
 
 ### 1.4 Roles
 
@@ -217,7 +221,8 @@ frontend/src/
    │  ├─ estados/              estados.ts (estado backend → texto y variante, guía 1.8)
    │  └─ ui-state/             breakpoints.ts · notificaciones.service.ts
    │
-   ├─ layout/                  shell · sidebar · topbar · breadcrumbs · page-header
+   ├─ layout/                  shell interno · sidebar · topbar · breadcrumbs · page-header
+   │                           shell público de la tienda
    │
    ├─ shared/
    │  ├─ ui/                   button · estado · tag · panel · kpi-ledger · field · aviso
@@ -227,19 +232,38 @@ frontend/src/
    │  └─ forms/                validators/ · server-errors.ts
    │
    └─ features/
-      ├─ auth/                 login
-      ├─ config/usuarios/      usuarios y roles
+      ├─ auth/                 login de empleados y de clientes
+      ├─ panel/                panel del día (dashboard ejecutivo)
+      ├─ ventas/
+      │  ├─ mostrador/         POS
+      │  ├─ redes-sociales/    venta manual por redes sociales
+      │  ├─ historial/         listado, detalle y cancelación de ventas
+      │  ├─ pedidos/           preparación, despacho y entrega
+      │  ├─ mayoristas/        clientes mayoristas, ventas, cuotas y cobros
+      │  └─ devoluciones/      solicitudes, evaluación y nota de crédito
       ├─ inventario/
       │  ├─ productos/         alta, edición, variantes, precios, fotos
-      │  └─ stock/             consulta y ajuste manual
-      └─ ventas/
-         ├─ mostrador/         POS
-         └─ historial/         listado y detalle de ventas
+      │  ├─ stock/             consulta, movimientos y ajuste manual
+      │  ├─ sin-rotacion/      detección y promoción de liquidación
+      │  └─ recepciones/       recepción de mercadería contra la orden de compra
+      ├─ compras/
+      │  ├─ ordenes/           órdenes de compra y sugerencias de reposición
+      │  └─ proveedores/       proveedores, compromisos, pagos y cuenta corriente
+      ├─ analisis/
+      │  ├─ prediccion/        pronóstico de demanda (ds-api)
+      │  └─ reportes/          reportes de los requerimientos de análisis
+      ├─ auditoria/            consulta de cambios
+      ├─ config/
+      │  ├─ usuarios/          usuarios y roles
+      │  ├─ categorias/        árbol de categorías
+      │  ├─ descuentos/        promociones y descuentos
+      │  └─ parametros/        canales, medios de pago, política de devolución, tarifas de envío
+      ├─ tienda/               rutas públicas: catálogo, ficha, carrito, checkout
+      └─ mi-cuenta/            portal del cliente: pedidos, devoluciones, cuenta corriente (mayoristas)
 ```
 
-Features futuras, sin crear hasta que se aborden: `panel`, `ventas/pedidos`, `ventas/mayoristas`,
-`inventario/recepciones`, `compras/ordenes`, `compras/proveedores`, `analisis/prediccion`, `analisis/reportes`,
-`tienda`, `auditoria`, `personal` (rutas de la guía 6.1).
+Las rutas siguen el mapa de la guía 6.1. El módulo de personal de la guía no forma parte del modelo de dominio y
+no se construye.
 
 Estructura interna de cada feature:
 
@@ -363,20 +387,35 @@ export class AuthStore {
 **Permisos por acción.** Los componentes y guards preguntan por permisos, no por roles. El mapa rol → permisos
 vive en `core/auth/permisos.ts` y es el único lugar que conoce los roles.
 
+Roles de empleados:
+
 | Permiso | GERENTE | VENDEDOR | OPERARIO_DEPOSITO | ADMINISTRATIVO |
 |---|:-:|:-:|:-:|:-:|
-| `ventas:registrar` | ✔ | ✔ | | |
+| `panel:leer` | ✔ | resumido | resumido | ✔ |
+| `ventas:registrar` (mostrador y redes sociales) | ✔ | ✔ | | |
 | `ventas:leer` | ✔ | ✔ | | ✔ |
 | `ventas:cancelar` | ✔ | | | |
+| `mayoristas:administrar` (clientes, ventas, cobros) | ✔ | | | |
+| `devoluciones:registrar` / `devoluciones:verificar` | ✔ | ✔ | ✔ | |
+| `devoluciones:evaluar` | ✔ | | | |
+| `pedidos:gestionar` (preparación y despacho) | ✔ | | ✔ | |
 | `stock:leer` | ✔ | ✔ | ✔ | ✔ |
 | `stock:ajustar` | ✔ | | ✔ | |
 | `productos:leer` | ✔ | ✔ | ✔ | ✔ |
-| `productos:editar` | ✔ | | | |
-| `precios:editar` | ✔ | | | |
-| `usuarios:administrar` | ✔ | | | |
+| `productos:editar` / `precios:editar` / `descuentos:editar` | ✔ | | | |
+| `recepciones:registrar` | ✔ | | ✔ | |
+| `recepciones:resolver` (incidencias) | ✔ | | | ✔ |
+| `compras:gestionar` (órdenes de compra) | ✔ | | | ✔ |
+| `proveedores:gestionar` (proveedores, compromisos, pagos) | ✔ | | | ✔ |
+| `analisis:leer` (pronóstico, sin rotación, reportes) | ✔ | | | ✔ |
+| `auditoria:leer` | ✔ | | | |
+| `usuarios:administrar` / `parametros:editar` | ✔ | | | |
 
-> Matriz propuesta a partir de RNS-ROL-01 y de los actores de los casos de uso. El equipo la valida antes de
-> implementar la feature de usuarios.
+Roles de clientes (solo `mi-cuenta` y tienda): `CLIENTE_MINORISTA` consulta sus pedidos y solicita devoluciones;
+`CLIENTE_MAYORISTA` consulta su historial, cuotas pendientes y crédito disponible.
+
+> Matriz propuesta a partir de RNS-ROL-01 y de los actores de los casos de uso. El equipo la valida en la fase 0
+> del plan de desarrollo.
 
 Para ocultar acciones en un template se usa la directiva estructural:
 
@@ -538,24 +577,43 @@ mantiene.
 
 ### 5.13 Mercado Pago (al final de la entrega)
 
-- Se integra en `ventas/mostrador`, para los medios de pago con `requiere_procesamiento` (débito y crédito).
+- Se usa en el checkout de la tienda (CUU2.1), en el POS para débito y crédito (CUU1.2) y en los reintegros de
+  devoluciones cobradas por esa vía (CUU10.3).
+- Hasta la fase 7 del plan, el backend expone un procesador de pago simulado con el mismo contrato; el frontend
+  no cambia al reemplazarlo.
 - El frontend nunca maneja credenciales ni datos de tarjeta: el backend crea la operación y el frontend muestra
   su estado (pendiente, aprobado, rechazado).
-- El rechazo vuelve al paso de selección de medio de pago (CUU1.2, camino 2.a).
+- El rechazo vuelve al paso de selección de medio de pago (CUU1.2 camino 2.a, CUU2.1 camino 3.a).
 - Se detalla en este documento cuando se aborde.
 
 ---
 
-## 6. Features del alcance actual
+## 6. Features del sistema
 
-| Feature | Ruta | Pantallas | Casos de uso | Permiso de acceso |
+El orden en que se construyen y su responsable están en el plan de desarrollo.
+
+| Feature | Ruta | Pantallas principales | Casos de uso | Permiso de acceso |
 |---|---|---|---|---|
-| `auth` | `/login` | Inicio de sesión | Iniciar sesión | Público |
-| `config/usuarios` | `/config/usuarios` | Listado, alta y edición, asignación de rol | Registrar usuario, asignar rol | `usuarios:administrar` |
-| `inventario/productos` | `/inventario/productos` | Listado, `form-page` de producto, variantes con fotos, historial de precios | CUU9.1, CUU9.2, CUU9.4 | `productos:leer` (edición: `productos:editar`) |
-| `inventario/stock` | `/inventario/stock` | Tabla con variantes expandibles y panel de detalle (guía 10.3), diálogo de ajuste manual | CUU1.1 (consulta), CUU9.5 | `stock:leer` (ajuste: `stock:ajustar`) |
-| `ventas/mostrador` | `/ventas/mostrador` | POS: búsqueda, tarjetas de producto, ticket, medios de pago, cobro, comprobante (guía 10.2) | CUU1.1, CUU1.2, CUU1.3 | `ventas:registrar` |
-| `ventas/historial` | `/ventas` | Listado de ventas con estado y detalle con su comprobante | Consulta de ventas | `ventas:leer` |
+| `auth` | `/login`, `/tienda/ingresar` | Inicio de sesión de empleados y de clientes | — | Público |
+| `panel` | `/panel` | Panel del día (guía 10.1) | CUU11.1 | `panel:leer` |
+| `ventas/mostrador` | `/ventas/mostrador` | POS (guía 10.2) | CUU1.1 a 1.3 | `ventas:registrar` |
+| `ventas/redes-sociales` | `/ventas/redes-sociales` | Registro manual con opción de envío | CUU12.1 | `ventas:registrar` |
+| `ventas/historial` | `/ventas` | Listado, detalle con comprobante y cuotas, cancelación | — | `ventas:leer` |
+| `ventas/pedidos` | `/ventas/pedidos` | Cola de preparación, bultos, despacho y entrega (guía 10.5) | CUU2.2 | `pedidos:gestionar` |
+| `ventas/mayoristas` | `/ventas/mayoristas` | Clientes, ficha con cuenta corriente, venta mayorista, cobro de cuotas | CUU7.1 a 7.5 | `mayoristas:administrar` |
+| `ventas/devoluciones` | `/ventas/devoluciones` | Solicitudes, evaluación, verificación y nota de crédito | CUU10.1 a 10.4 | `devoluciones:*` |
+| `inventario/productos` | `/inventario/productos` | Listado, `form-page`, variantes con fotos, historial de precios | CUU9.1, 9.2, 9.4 | `productos:leer` |
+| `inventario/stock` | `/inventario/stock` | Tabla con variantes y panel de detalle (guía 10.3), ajuste manual | CUU1.1, CUU9.5 | `stock:leer` |
+| `inventario/sin-rotacion` | `/inventario/sin-rotacion` | Detección por período y promoción de liquidación | CUU8.1, 8.2 | `analisis:leer` |
+| `inventario/recepciones` | `/inventario/recepciones` | Recepción con remito adjunto y control contra la orden (guía 10.4, sin OCR) | CUU4.1 a 4.4 | `recepciones:registrar` |
+| `compras/ordenes` | `/compras/ordenes` | Sugerencias, borrador, emisión en PDF, seguimiento | CUU5.1, 5.2 | `compras:gestionar` |
+| `compras/proveedores` | `/compras/proveedores` | Proveedores, compromisos, pagos, cuenta corriente, vencimientos | CUU5.3, CUU6.1 a 6.3 | `proveedores:gestionar` |
+| `analisis/prediccion` | `/analisis/prediccion` | Pronóstico con nivel de confianza (guía 11) | CUU11.2 | `analisis:leer` |
+| `analisis/reportes` | `/analisis/reportes` | Reportes de los requerimientos de análisis de la Etapa 3 | — | `analisis:leer` |
+| `auditoria` | `/auditoria` | Lista de cambios con filtros (guía 10.5) | — | `auditoria:leer` |
+| `config/*` | `/config/...` | Usuarios, categorías, descuentos, parámetros | CUU9.3 | `usuarios:administrar`, `parametros:editar`, `descuentos:editar` |
+| `tienda` | `/tienda` | Catálogo, ficha, carrito con reserva, checkout (guía 12) | CUU2.1 | Público |
+| `mi-cuenta` | `/mi-cuenta` | Pedidos, devoluciones y, para mayoristas, cuenta corriente | CUU2.3, CUU7.3, CUU10.1 | Rol de cliente |
 
 Atajos del mostrador (guía 10.2): `F2` búsqueda, `F4` cliente, `F8` medio de pago, `F12` cobrar, `Esc` quitar la
 última línea.
