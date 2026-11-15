@@ -26,21 +26,18 @@ backend/src/
 ├─ config/
 │  └─ env.ts                    variables de entorno validadas con Zod; si falta una, el servidor no arranca
 ├─ shared/
-│  ├─ db/                       base.entity.ts, configuración de MikroORM, subscriber de auditoría
+│  ├─ db/                       base.entity.ts, configuración de MikroORM y em()
 │  ├─ http/                     api-error.ts, error-handler.ts, validar.ts, paginacion.ts, buscar-o-fallar.ts
 │  ├─ auth/                     autenticar.ts, require-permission.ts, permisos.ts, sesion.ts (JWT y cookie)
 │  ├─ openapi/                  armado del documento y publicación en /api/docs
 │  ├─ dinero.ts                 operaciones con montos en centavos
 │  └─ logger.ts                 configuración de pino
-├─ modules/
-│  ├─ index.ts                  lista de módulos: una línea por módulo
-│  ├─ auth/                     login, logout y sesión actual
-│  └─ <modulo>/                 un módulo por recurso (sección 2)
-├─ migrations/
-└─ seeders/
-   ├─ DatabaseSeeder.ts         ejecuta los seeders de referencia
-   ├─ referencia/               datos fijos obligatorios: roles, medios de pago, canales
-   └─ desarrollo/               datos de ejemplo para desarrollo; nunca se ejecutan en producción
+└─ modules/
+   ├─ index.ts                  lista de módulos y de entidades: una línea por módulo
+   ├─ auth/                     login, logout y sesión actual
+   └─ <modulo>/                 un módulo por recurso (sección 2)
+
+backend/test/                   tests de Vitest y Supertest (sección 11), fuera de src/ para que tsc no los compile
 ```
 
 ---
@@ -61,11 +58,13 @@ modules/categorias/
 └─ categorias.errors.ts         códigos de error del módulo
 ```
 
+El módulo `auth` no tiene entidad propia: lee al usuario y registra su acceso a través del servicio de `usuarios`.
+
 ### 2.1 Responsabilidad de cada archivo
 
 | Archivo           | Hace                                                                                           | No hace                                                        |
 | ----------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `*.routes.ts`     | Declara cada endpoint con `requirePermission` y `validar`                                      | Lógica de ningún tipo                                          |
+| `*.routes.ts`     | Declara cada endpoint con `requirePermission` y `validar` (excepción: `auth`, sección 6.2)     | Lógica de ningún tipo                                          |
 | `*.schemas.ts`    | Valida la entrada; sus tipos son los DTOs de entrada (`XAltaDto`, `XEdicionDto`, `XPaginaDto`) | Validar reglas de negocio que requieren la base de datos       |
 | `*.dto.ts`        | Define la forma exacta de la respuesta (`XFilaDto`, `XDetalleDto`)                             | Exponer campos internos (contraseñas, claves técnicas sin uso) |
 | `*.mapper.ts`     | Convierte entidades en DTOs de salida, con el tipo de retorno atado al DTO                     | Consultas ni reglas                                            |
@@ -116,6 +115,7 @@ categoriasRouter.delete(
 export const categoriaAltaSchema = z
   .object({
     nombre: z.string().trim().min(1).max(80),
+    descripcion: z.string().trim().min(1).max(255),
     padreId: z.number().int().positive().nullable(),
   })
   .strict();
@@ -185,7 +185,7 @@ export const service = {
       : null; // RNS-CAT-08
     if (await existeHermana(dto.nombre, padre))
       throw new ApiError(ERRORES.NOMBRE_DUPLICADO); // RNS-CAT-13
-    const categoria = em().create(Categoria, { nombre: dto.nombre, padre });
+    const categoria = em().create(Categoria, { ...dto, padre });
     await em().flush();
     return categoria;
   },
@@ -220,14 +220,22 @@ export const ERRORES = {
 
 ```ts
 export const MODULOS: Modulo[] = [
-  { ruta: "/auth", router: authRouter, publico: true },
+  { ruta: "/auth", router: authRouter, openapi: authOpenApi, publico: true },
   { ruta: "/categorias", router: categoriasRouter, openapi: categoriasOpenApi },
+  // una línea por módulo
+];
+
+export const ENTIDADES = [
+  Rol,
+  Usuario,
+  Categoria,
   // una línea por módulo
 ];
 ```
 
 La autenticación se aplica una sola vez a todos los módulos que no son públicos. Los permisos se declaran en
-cada ruta.
+cada ruta. `ENTIDADES` registra las entidades de MikroORM de forma explícita, sin rutas con comodines, para que el
+ORM las encuentre igual al compilar con `tsc` y al ejecutar los tests con Vitest.
 
 ### 2.4 Reglas entre módulos
 
@@ -279,7 +287,7 @@ Coincide con `PageQuery` del frontend.
 | `direccion`        | `asc` \| `desc` | `asc`                        |                                                                    |
 | `q`                | texto, máx. 100 | —                            | Búsqueda libre en las columnas que define el módulo                |
 | Filtros            | según el módulo | —                            | Parámetros propios (`padreId`, `estado`), declarados en el esquema |
-| `incluirInactivos` | booleano        | `false`                      | Solo en recursos con baja lógica                                   |
+| `incluirInactivos` | booleano        | `false`                      | Solo en maestros (baja lógica, sección 7.2)                        |
 
 `esquemaPagina({ ordenables, filtros })` arma el esquema Zod y `paginar(em, entidad, query, opciones)` devuelve
 `{ datos, total, pagina, tamanio }`. Nunca se ordena por una columna que llega del cliente sin pasar por la lista
@@ -321,15 +329,14 @@ Todas las respuestas de error tienen la forma que espera el frontend (`ApiError`
 {
   "status": 409,
   "code": "CATEGORIA_CON_SUBCATEGORIAS",
-  "mensaje": "La categoría tiene subcategorías y no puede eliminarse.",
-  "campos": {}
+  "mensaje": "La categoría tiene subcategorías y no puede eliminarse."
 }
 ```
 
 - `code` es estable: el frontend lo usa para elegir el texto y el lugar donde mostrarlo.
 - `mensaje` es formal e impersonal. Nunca incluye detalles internos (SQL, stack, nombres de tablas).
 - `campos` solo aparece en errores de validación o cuando una regla de negocio apunta a un campo
-  (por ejemplo, `{ "nombre": "CATEGORIA_NOMBRE_DUPLICADO" }`).
+  (por ejemplo, `{ "nombre": "CATEGORIA_NOMBRE_DUPLICADO" }`). Si no hay campos, la propiedad se omite.
 
 ### 5.2 Manejador central
 
@@ -341,12 +348,14 @@ Todas las respuestas de error tienen la forma que espera el frontend (`ApiError`
 | `ApiError` lanzado por un servicio            | El de su definición | El de su definición                                                    |
 | Validación de Zod                             | 400                 | `VALIDACION`                                                           |
 | JSON mal formado en el body                   | 400                 | `JSON_INVALIDO`                                                        |
-| Sin cookie de sesión o token vencido          | 401                 | `SESION_INVALIDA`                                                      |
+| Sin sesión, token vencido o usuario inactivo  | 401                 | `SESION_INVALIDA`                                                      |
 | Permiso insuficiente                          | 403                 | `SIN_PERMISO`                                                          |
 | `NotFoundError` de MikroORM (`buscarOFallar`) | 404                 | `NO_ENCONTRADO`                                                        |
 | Ruta inexistente                              | 404                 | `RUTA_INEXISTENTE`                                                     |
 | Clave única violada                           | 409                 | `DUPLICADO`                                                            |
 | Clave foránea violada                         | 409                 | `EN_USO`                                                               |
+| Body de más de 1 MB                           | 413                 | `CUERPO_DEMASIADO_GRANDE`                                              |
+| Límite de intentos de inicio de sesión        | 429                 | `DEMASIADOS_INTENTOS`                                                  |
 | Cualquier otro                                | 500                 | `ERROR_INTERNO` (se registra con su stack; la respuesta no lo incluye) |
 
 ### 5.3 Errores de negocio
@@ -364,9 +373,10 @@ utiliza.
 
 - JWT firmado con `JWT_SECRET`, en la cookie `access_token`: `httpOnly`, `sameSite: 'strict'`,
   `secure` en producción (`NODE_ENV === 'production'`).
-- **Duración: 3 horas** (token y cookie), sin renovación. Al vencer, el frontend recibe 401 y redirige al login
-  conservando la ruta.
-- Payload: `{ sub: idUsuario, rol }`. Los permisos no viajan en el token: se calculan a partir del rol.
+- **Duración:** la define `JWT_EXPIRES_IN` (`3h`), con el formato `<número><s|m|h|d>`; vale para el token y la
+  cookie, sin renovación. Al vencer, el frontend recibe 401 y redirige al login conservando la ruta.
+- Payload: `{ sub: idUsuario }`. Los permisos no viajan en el token: `autenticar` los lee del rol del usuario en
+  cada request, de modo que un cambio de permisos o una desactivación rige de inmediato.
 - Contraseñas con `bcrypt` (costo 10). El hash nunca sale de la base: ningún DTO lo incluye.
 
 ### 6.2 Endpoints
@@ -374,22 +384,30 @@ utiliza.
 | Endpoint                | Acceso                                 | Respuesta                                                            |
 | ----------------------- | -------------------------------------- | -------------------------------------------------------------------- |
 | `POST /api/auth/login`  | Público, con límite de intentos por IP | Cookie + `{ datos: UsuarioSesionDto }`                               |
-| `POST /api/auth/logout` | Público                                | Borra la cookie                                                      |
+| `POST /api/auth/logout` | Público                                | 204, sin cuerpo; borra la cookie                                     |
 | `GET /api/auth/me`      | Autenticado                            | `{ datos: UsuarioSesionDto }` con `id`, `nombre`, `rol` y `permisos` |
 
-El login actualiza `ultimo_acceso` (RNS-USU-01). Ante usuario inexistente, inactivo o contraseña incorrecta, la
-respuesta es siempre la misma (401, `CREDENCIALES_INVALIDAS`), para no revelar qué dato falló.
+- El login recibe `{ nombreUsuario, contrasena }` y actualiza `ultimo_acceso` (RNS-USU-01). Ante usuario
+  inexistente, inactivo, sin contraseña o con contraseña incorrecta, la respuesta es siempre la misma (401,
+  `CREDENCIALES_INVALIDAS`), para no revelar qué dato falló.
+- Límite: 10 intentos fallidos por IP cada 15 minutos; los exitosos no cuentan. Al superarlo: 429,
+  `DEMASIADOS_INTENTOS`.
+- En `UsuarioSesionDto`, `nombre` es el nombre de usuario y `rol` es el nombre del rol.
+- Las rutas de `auth` son la única excepción a `requirePermission`: login y logout son públicas y `/auth/me` solo
+  exige sesión. `validar` se aplica donde la ruta recibe datos.
 
 ### 6.3 Permisos
 
-- `autenticar` (en `shared/auth/autenticar.ts`) verifica la cookie y deja el usuario en `res.locals.usuario`.
-  Se aplica una sola vez a todos los módulos no públicos.
-- `requirePermission('stock:ajustar')` se declara en cada ruta. Responde 403 si el rol no tiene el permiso.
-- Los roles son los de RNS-ROL-01: `GERENTE`, `VENDEDOR`, `OPERARIO_DEPOSITO`, `ADMINISTRATIVO`,
-  `CLIENTE_MINORISTA`, `CLIENTE_MAYORISTA`.
-- El mapa rol → permisos vive en código, en `shared/auth/permisos.ts`. La lista de permisos es la misma que usa
-  el frontend (`frontend/src/app/core/auth/roles.ts`); `/auth/me` devuelve los permisos del usuario para que el
-  frontend no tenga que deducirlos.
+- `autenticar` (en `shared/auth/autenticar.ts`) verifica la cookie, carga el usuario con su rol y deja en
+  `res.locals.usuario` su id, nombre, rol y permisos. Si el usuario no existe o está inactivo, responde 401
+  `SESION_INVALIDA`. Se aplica una sola vez a todos los módulos no públicos y, además, en `/auth/me`.
+- `requirePermission('stock:ajustar')` se declara en cada ruta y responde 403 si el usuario no tiene el permiso.
+  La autorización verifica permisos, nunca el nombre del rol.
+- Los roles son un maestro más: el administrador los crea con un nombre y los permisos que elige (`ROL.permisos`
+  en el modelo de dominio). No existen roles fijos en el código.
+- El catálogo de permisos, es decir, los que exigen los endpoints, vive en `shared/auth/permisos.ts` y es la misma
+  lista que usa el frontend (tipo `Permiso` de `frontend/src/app/core/auth/roles.ts`). `/auth/me` devuelve los
+  permisos del usuario para que el frontend no tenga que deducirlos.
 
 ---
 
@@ -397,8 +415,9 @@ respuesta es siempre la misma (401, `CREDENCIALES_INVALIDAS`), para no revelar q
 
 ### 7.1 Entidades
 
-- Toda entidad extiende `BaseEntity`: `id` autoincremental, `creadoEn` y `actualizadoEn` automáticos.
-- Las entidades con baja lógica agregan `activo: boolean` (por defecto `true`).
+- Toda entidad extiende `BaseEntity`: `id` autoincremental, `fechaCreacion` y `fechaUltimaModificacion`
+  automáticos, como en el modelo de dominio.
+- Los maestros agregan `activo: boolean` (por defecto `true`) para la baja lógica.
 - Las relaciones se declaran según el modelo de dominio. Los atributos derivados del modelo no se almacenan: se
   calculan en el servicio o en la consulta.
 - Montos: `DECIMAL(12,2)` en la base. En el servicio se opera en centavos (enteros) con `shared/dinero.ts`, nunca
@@ -408,13 +427,14 @@ respuesta es siempre la misma (401, `CREDENCIALES_INVALIDAS`), para no revelar q
 
 ### 7.2 Bajas
 
-El servicio decide en `eliminar()`:
+El servicio decide en `eliminar()`. Todos los maestros siguen el mismo criterio:
 
-1. **Sin entidades asociadas:** baja física.
-2. **Con entidades asociadas, si el recurso tiene historial** (productos, variantes, clientes, proveedores,
-   usuarios): baja lógica (`activo = false`). Los listados la ocultan salvo con `incluirInactivos=true`.
-3. **Con entidades asociadas, si una regla de negocio lo impide** (por ejemplo, RNS-CAT-09 y RNS-CAT-10):
-   409 con el código de esa regla.
+1. **Si una regla de negocio impide la baja** (por ejemplo, RNS-CAT-09: categoría con subcategorías): 409 con el
+   código de esa regla.
+2. **Maestro utilizado**, es decir, con al menos un registro de otra entidad que lo referencia (por ejemplo, una
+   categoría con productos, RNS-CAT-10): baja lógica (`activo = false`). Los listados la ocultan salvo con
+   `incluirInactivos=true`.
+3. **Maestro sin utilizar:** baja física.
 
 La respuesta informa qué baja se aplicó, para que el frontend muestre «eliminado» o «desactivado».
 
@@ -427,13 +447,18 @@ La respuesta informa qué baja se aplicó, para que el frontend muestre «elimin
 
 ### 7.4 Auditoría
 
-Un subscriber de MikroORM registra altas, modificaciones y bajas de las entidades auditadas (RNS-AUD), con el
+Se auditan los maestros (RNS-AUD). Un subscriber de MikroORM registrará sus altas, modificaciones y bajas, con el
 usuario de la sesión y los valores anteriores y nuevos. Las entidades auditadas se marcan en su definición; el
 servicio no escribe la auditoría a mano.
 
-### 7.5 Migraciones y seeds
+**Pendiente:** el mecanismo se incorpora después del primer maestro, una vez definidos en el modelo de dominio los
+atributos de `OBJETO_AUDITORIA` que requiere.
 
-- El esquema se sincroniza al arrancar con `orm.schema.update({ safe: true })`: crea tablas y columnas, pero no borra. Por ahora no se usan migraciones.
+### 7.5 Esquema de la base de datos
+
+- El esquema se sincroniza al arrancar con `orm.schema.update({ safe: true })`: crea tablas y columnas, pero no
+  borra. Para sumar una entidad alcanza con registrarla en `ENTIDADES` (sección 2.3).
+- Por ahora no se usan migraciones ni seeders.
 
 ---
 
@@ -462,17 +487,21 @@ servicio no escribe la auditoría a mano.
 ## 10. Seguridad general
 
 - `helmet` para cabeceras de seguridad.
-- CORS solo para `FRONTEND_URL`, con `credentials: true`.
+- CORS solo para `CORS_ORIGIN`, con `credentials: true`. Es la misma variable que usa `ds-api`.
 - Límite de tamaño del body (`express.json({ limit: '1mb' })`); la subida de archivos se define con su propio
   límite cuando exista.
-- Límite de intentos en `POST /api/auth/login` (`express-rate-limit`).
-- Variables de entorno validadas en `config/env.ts`; los secretos solo viven en `.env`, que no se versiona.
+- Límite de intentos en `POST /api/auth/login` (`express-rate-limit`, sección 6.2).
+- Variables de entorno validadas en `config/env.ts` (por ejemplo, `JWT_SECRET` de al menos 32 caracteres); los
+  secretos solo viven en `.env`, que no se versiona.
 
 ---
 
 ## 11. Tests
 
-- Vitest para tests unitarios y Supertest para endpoints, contra una base de prueba con las migraciones aplicadas.
+- Vitest para tests unitarios y Supertest para endpoints, contra la base de prueba `<DB_NAME>_test` del mismo
+  servidor MySQL. Al iniciar, los tests regeneran su esquema y cada archivo limpia las tablas antes de cada caso.
+- Los tests viven en `backend/test/` y se ejecutan dentro del contenedor: `docker compose exec backend npm test`.
+  La base de prueba la crea el script de inicialización de MySQL (`mysql/init/`) al crear el volumen.
 - Cada regla de negocio tiene al menos un test que la cita en su nombre
   (`it('RNS-CAT-13: rechaza un nombre repetido entre hermanas')`).
 - Cada endpoint tiene al menos el caso exitoso y su error más probable (validación, permiso o regla).
@@ -489,28 +518,27 @@ servicio no escribe la auditoría a mano.
 | Sesión        | `jsonwebtoken`, `bcrypt`, `cookie-parser`                                                       |
 | Seguridad     | `helmet`, `cors`, `express-rate-limit`                                                          |
 | Logs          | `pino`, `pino-http`; `pino-pretty` en desarrollo                                                |
-| Base de datos | `@mikro-orm/core`, `@mikro-orm/mysql`, `@mikro-orm/migrations`, `@mikro-orm/seeder`             |
+| Base de datos | `@mikro-orm/core`, `@mikro-orm/mysql`; `@mikro-orm/decorators` y `reflect-metadata` (decoradores legacy) |
 | Tests         | `vitest`, `supertest`                                                                           |
+| Tipos         | `@types/*` de los paquetes que no incluyen sus propios tipos                                    |
 
-`package.json` declara solo dependencias directas: las internas de Express que hoy aparecen listadas se quitan.
-Cualquier dependencia nueva se acuerda antes de agregarla.
+`package.json` declara solo dependencias directas. Cualquier dependencia nueva se acuerda antes de agregarla.
 
 ---
 
 ## 13. Agregar un módulo
 
 1. Crear `modules/<modulo>/` con los ocho archivos de la sección 2.
-2. Crear la migración de sus entidades y, si corresponde, su seeder de referencia o de desarrollo.
-3. Agregar la línea del módulo en `modules/index.ts`.
-4. Escribir los tests de sus reglas y endpoints.
-5. Verificar que aparece completo en `/api/docs` y avisar al frontend para regenerar los tipos.
+2. Agregar en `modules/index.ts` la línea del módulo en `MODULOS` y sus entidades en `ENTIDADES`.
+3. Escribir los tests de sus reglas y endpoints.
+4. Verificar que aparece completo en `/api/docs` y avisar al frontend para regenerar los tipos.
 
 ### Definición de terminado
 
 - [ ] Build sin errores y tests en verde.
-- [ ] Todas las rutas con `requirePermission` y `validar`, y documentadas en OpenAPI.
+- [ ] Todas las rutas con `requirePermission` y `validar` (salvo la excepción de `auth`), y documentadas en OpenAPI.
 - [ ] Respuestas a través del mapper; ningún controlador devuelve una entidad.
 - [ ] Reglas de negocio en el servicio, citando su código RNS, con su test.
 - [ ] Errores del módulo en `<modulo>.errors.ts`, con mensajes según `CLAUDE.md`.
 - [ ] Bajas según la sección 7.2.
-- [ ] Cambios de esquema con migración.
+- [ ] Entidades registradas en `ENTIDADES`.
