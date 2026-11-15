@@ -9,12 +9,12 @@ profesionalismo**. Vale para pantallas, ayudas, diálogos, errores, avisos, corr
 - **Redacción de un documento de la empresa, no de una conversación.** No se usan «acá», «después», «mal», «hay
   que», «se va», «sale», «lo que no tiene vuelta atrás» ni preguntas coloquiales como título.
 
-| Incorrecto | Correcto |
-| --- | --- |
-| Lo que no tiene vuelta atrás | Acción irreversible |
+| Incorrecto                                     | Correcto                                            |
+| ---------------------------------------------- | --------------------------------------------------- |
+| Lo que no tiene vuelta atrás                   | Acción irreversible                                 |
 | Si después el recibo de una persona estaba mal | Ante un error en el recibo de sueldo de una persona |
-| ¿Qué pasa al cerrar? | Efectos del cierre |
-| ¿Cómo se corrige un recibo? | Procedimiento de corrección del recibo |
+| ¿Qué pasa al cerrar?                           | Efectos del cierre                                  |
+| ¿Cómo se corrige un recibo?                    | Procedimiento de corrección del recibo              |
 
 - **Botones en infinitivo** y vocabulario del sistema: «correo electrónico», «Seleccionar», «Eliminar», «importe».
 - **«Recibo de sueldo»**, nunca «de haberes». Sin dos puntos explicativos ni «(s)» en los plurales.
@@ -51,3 +51,8 @@ refactor(fundaciones)!: separar agregado de la capa de persistencia
 ```
 
 **NO añadir nunca** los trailers `Co-Authored-By: Claude ...` ni `Claude-Session: ...` a los commits ni a los cuerpos de PR.
+
+## Documentación vigente
+
+- El modelo de dominio está en `docs/modelo-dominio.md`. Es la única fuente para entidades, atributos y relaciones.
+- No buscar documentación eliminada en el historial de git (`git log`, `git show`, checkout de commits anteriores). El plan de desarrollo quedó descartado y no se usa.

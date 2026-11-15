@@ -4,13 +4,13 @@ API de negocio del ERP de Bazar Champagne Florentina. Este documento es la fuent
 cada módulo. Todos los CRUD siguen la misma estructura; las diferencias entre módulos están en sus reglas de
 negocio, nunca en la forma de validar, responder o informar errores.
 
-| Dato | Valor |
-|---|---|
-| Stack | Node.js · Express 5 · TypeScript · MikroORM 7 (MySQL) con decoradores legacy |
-| Prefijo de la API | `/api` |
+| Dato                     | Valor                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| Stack                    | Node.js · Express 5 · TypeScript · MikroORM 7 (MySQL) con decoradores legacy         |
+| Prefijo de la API        | `/api`                                                                               |
 | Contrato con el frontend | OpenAPI en `/api/openapi.json` y `/api/docs`; el frontend genera sus tipos desde ahí |
-| Textos | Mensajes de error formales e impersonales, según `CLAUDE.md` |
-| Commits | Conventional Commits, según `CLAUDE.md` |
+| Textos                   | Mensajes de error formales e impersonales, según `CLAUDE.md`                         |
+| Commits                  | Conventional Commits, según `CLAUDE.md`                                              |
 
 Documentos relacionados: `frontend/docs/arquitectura-frontend.md` (secciones 5.6 a 5.10: sesión, errores, paginación
 y tipos que el frontend espera).
@@ -63,15 +63,15 @@ modules/categorias/
 
 ### 2.1 Responsabilidad de cada archivo
 
-| Archivo | Hace | No hace |
-|---|---|---|
-| `*.routes.ts` | Declara cada endpoint con `requirePermission` y `validar` | Lógica de ningún tipo |
-| `*.schemas.ts` | Valida la entrada; sus tipos son los DTOs de entrada (`XAltaDto`, `XEdicionDto`, `XPaginaDto`) | Validar reglas de negocio que requieren la base de datos |
-| `*.dto.ts` | Define la forma exacta de la respuesta (`XFilaDto`, `XDetalleDto`) | Exponer campos internos (contraseñas, claves técnicas sin uso) |
-| `*.mapper.ts` | Convierte entidades en DTOs de salida, con el tipo de retorno atado al DTO | Consultas ni reglas |
-| `*.service.ts` | Consultas, reglas de negocio (citando su código RNS), transacciones; lanza `ApiError` | Conocer `req` o `res` |
-| `*.controller.ts` | Toma `res.locals.validado`, llama al servicio, aplica el mapper y responde | Acceder al ORM, `try/catch`, traducir errores |
-| `*.errors.ts` | Declara los errores de negocio del módulo con su status, código y mensaje | — |
+| Archivo           | Hace                                                                                           | No hace                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `*.routes.ts`     | Declara cada endpoint con `requirePermission` y `validar`                                      | Lógica de ningún tipo                                          |
+| `*.schemas.ts`    | Valida la entrada; sus tipos son los DTOs de entrada (`XAltaDto`, `XEdicionDto`, `XPaginaDto`) | Validar reglas de negocio que requieren la base de datos       |
+| `*.dto.ts`        | Define la forma exacta de la respuesta (`XFilaDto`, `XDetalleDto`)                             | Exponer campos internos (contraseñas, claves técnicas sin uso) |
+| `*.mapper.ts`     | Convierte entidades en DTOs de salida, con el tipo de retorno atado al DTO                     | Consultas ni reglas                                            |
+| `*.service.ts`    | Consultas, reglas de negocio (citando su código RNS), transacciones; lanza `ApiError`          | Conocer `req` o `res`                                          |
+| `*.controller.ts` | Toma `res.locals.validado`, llama al servicio, aplica el mapper y responde                     | Acceder al ORM, `try/catch`, traducir errores                  |
+| `*.errors.ts`     | Declara los errores de negocio del módulo con su status, código y mensaje                      | —                                                              |
 
 ### 2.2 Ejemplo completo de un endpoint
 
@@ -79,11 +79,36 @@ modules/categorias/
 // categorias.routes.ts
 export const categoriasRouter = Router();
 
-categoriasRouter.get('/', requirePermission('parametros:editar'), validar({ query: categoriaPaginaSchema }), controller.listar);
-categoriasRouter.get('/:id', requirePermission('parametros:editar'), validar({ params: idParamsSchema }), controller.obtener);
-categoriasRouter.post('/', requirePermission('parametros:editar'), validar({ body: categoriaAltaSchema }), controller.crear);
-categoriasRouter.put('/:id', requirePermission('parametros:editar'), validar({ params: idParamsSchema, body: categoriaEdicionSchema }), controller.actualizar);
-categoriasRouter.delete('/:id', requirePermission('parametros:editar'), validar({ params: idParamsSchema }), controller.eliminar);
+categoriasRouter.get(
+  "/",
+  requirePermission("parametros:editar"),
+  validar({ query: categoriaPaginaSchema }),
+  controller.listar,
+);
+categoriasRouter.get(
+  "/:id",
+  requirePermission("parametros:editar"),
+  validar({ params: idParamsSchema }),
+  controller.obtener,
+);
+categoriasRouter.post(
+  "/",
+  requirePermission("parametros:editar"),
+  validar({ body: categoriaAltaSchema }),
+  controller.crear,
+);
+categoriasRouter.put(
+  "/:id",
+  requirePermission("parametros:editar"),
+  validar({ params: idParamsSchema, body: categoriaEdicionSchema }),
+  controller.actualizar,
+);
+categoriasRouter.delete(
+  "/:id",
+  requirePermission("parametros:editar"),
+  validar({ params: idParamsSchema }),
+  controller.eliminar,
+);
 ```
 
 ```ts
@@ -96,13 +121,23 @@ export const categoriaAltaSchema = z
   .strict();
 export type CategoriaAltaDto = z.infer<typeof categoriaAltaSchema>;
 
-export const categoriaPaginaSchema = esquemaPagina({ ordenables: ['nombre', 'id'], filtros: { padreId: z.coerce.number().int().optional() } });
+export const categoriaPaginaSchema = esquemaPagina({
+  ordenables: ["nombre", "id"],
+  filtros: { padreId: z.coerce.number().int().optional() },
+});
 ```
 
 ```ts
 // categorias.dto.ts
-export const categoriaFilaDto = z.object({ id: z.number(), nombre: z.string(), padre: z.string().nullable() });
-export const categoriaDetalleDto = categoriaFilaDto.extend({ padreId: z.number().nullable(), subcategorias: z.number() });
+export const categoriaFilaDto = z.object({
+  id: z.number(),
+  nombre: z.string(),
+  padre: z.string().nullable(),
+});
+export const categoriaDetalleDto = categoriaFilaDto.extend({
+  padreId: z.number().nullable(),
+  subcategorias: z.number(),
+});
 export type CategoriaFilaDto = z.infer<typeof categoriaFilaDto>;
 export type CategoriaDetalleDto = z.infer<typeof categoriaDetalleDto>;
 ```
@@ -110,7 +145,11 @@ export type CategoriaDetalleDto = z.infer<typeof categoriaDetalleDto>;
 ```ts
 // categorias.mapper.ts
 export const CategoriaMapper = {
-  fila: (c: Categoria): CategoriaFilaDto => ({ id: c.id, nombre: c.nombre, padre: c.padre?.nombre ?? null }),
+  fila: (c: Categoria): CategoriaFilaDto => ({
+    id: c.id,
+    nombre: c.nombre,
+    padre: c.padre?.nombre ?? null,
+  }),
   detalle: (c: Categoria): CategoriaDetalleDto => ({
     ...CategoriaMapper.fila(c),
     padreId: c.padre?.id ?? null,
@@ -137,11 +176,15 @@ export const controller = {
 ```ts
 // categorias.service.ts
 export const service = {
-  listar: (query: CategoriaPaginaDto) => paginar(em(), Categoria, query, { buscarEn: ['nombre'] }),
+  listar: (query: CategoriaPaginaDto) =>
+    paginar(em(), Categoria, query, { buscarEn: ["nombre"] }),
 
   async crear(dto: CategoriaAltaDto): Promise<Categoria> {
-    const padre = dto.padreId ? await buscarOFallar(Categoria, dto.padreId) : null; // RNS-CAT-08
-    if (await existeHermana(dto.nombre, padre)) throw new ApiError(ERRORES.NOMBRE_DUPLICADO); // RNS-CAT-13
+    const padre = dto.padreId
+      ? await buscarOFallar(Categoria, dto.padreId)
+      : null; // RNS-CAT-08
+    if (await existeHermana(dto.nombre, padre))
+      throw new ApiError(ERRORES.NOMBRE_DUPLICADO); // RNS-CAT-13
     const categoria = em().create(Categoria, { nombre: dto.nombre, padre });
     await em().flush();
     return categoria;
@@ -152,9 +195,22 @@ export const service = {
 ```ts
 // categorias.errors.ts
 export const ERRORES = {
-  NOMBRE_DUPLICADO: { status: 409, code: 'CATEGORIA_NOMBRE_DUPLICADO', mensaje: 'Ya existe una categoría con ese nombre en el mismo nivel.' },
-  CON_SUBCATEGORIAS: { status: 409, code: 'CATEGORIA_CON_SUBCATEGORIAS', mensaje: 'La categoría tiene subcategorías y no puede eliminarse.' },
-  CICLO: { status: 409, code: 'CATEGORIA_CICLO', mensaje: 'La categoría no puede depender de sí misma ni de una subcategoría propia.' },
+  NOMBRE_DUPLICADO: {
+    status: 409,
+    code: "CATEGORIA_NOMBRE_DUPLICADO",
+    mensaje: "Ya existe una categoría con ese nombre en el mismo nivel.",
+  },
+  CON_SUBCATEGORIAS: {
+    status: 409,
+    code: "CATEGORIA_CON_SUBCATEGORIAS",
+    mensaje: "La categoría tiene subcategorías y no puede eliminarse.",
+  },
+  CICLO: {
+    status: 409,
+    code: "CATEGORIA_CICLO",
+    mensaje:
+      "La categoría no puede depender de sí misma ni de una subcategoría propia.",
+  },
 } as const satisfies Record<string, DefinicionError>;
 ```
 
@@ -164,8 +220,8 @@ export const ERRORES = {
 
 ```ts
 export const MODULOS: Modulo[] = [
-  { ruta: '/auth', router: authRouter, publico: true },
-  { ruta: '/categorias', router: categoriasRouter, openapi: categoriasOpenApi },
+  { ruta: "/auth", router: authRouter, publico: true },
+  { ruta: "/categorias", router: categoriasRouter, openapi: categoriasOpenApi },
   // una línea por módulo
 ];
 ```
@@ -188,24 +244,24 @@ cada ruta.
 
 ### 3.1 Nombres
 
-| Elemento | Convención | Ejemplo |
-|---|---|---|
-| Ruta | Español, plural, kebab-case | `/api/ordenes-de-compra` |
-| Campos JSON | Español, camelCase | `padreId`, `fechaEmision` |
-| Columnas de la base | snake_case (estrategia por defecto de MikroORM) | `padre_id` |
-| Valores de enums | MAYÚSCULAS con guiones bajos, como en el modelo de dominio | `PENDIENTE_APROBACION` |
-| Archivos | kebab-case con sufijo | `ordenes-de-compra.service.ts` |
+| Elemento            | Convención                                                 | Ejemplo                        |
+| ------------------- | ---------------------------------------------------------- | ------------------------------ |
+| Ruta                | Español, plural, kebab-case                                | `/api/ordenes-de-compra`       |
+| Campos JSON         | Español, camelCase                                         | `padreId`, `fechaEmision`      |
+| Columnas de la base | snake_case (estrategia por defecto de MikroORM)            | `padre_id`                     |
+| Valores de enums    | MAYÚSCULAS con guiones bajos, como en el modelo de dominio | `PENDIENTE_APROBACION`         |
+| Archivos            | kebab-case con sufijo                                      | `ordenes-de-compra.service.ts` |
 
 ### 3.2 Verbos, códigos y forma de la respuesta
 
-| Operación | Endpoint | Éxito | Cuerpo |
-|---|---|---|---|
-| Listar | `GET /recursos` | 200 | `{ datos: XFilaDto[], total, pagina, tamanio }` |
-| Obtener | `GET /recursos/:id` | 200 | `{ datos: XDetalleDto }` |
-| Crear | `POST /recursos` | 201 | `{ datos: XDetalleDto }` |
-| Editar | `PUT /recursos/:id` | 200 | `{ datos: XDetalleDto }` |
-| Eliminar | `DELETE /recursos/:id` | 200 | `{ datos: { baja: 'fisica' \| 'logica' } }` |
-| Acción de negocio | `POST /recursos/:id/<accion>` | 200 | `{ datos: XDetalleDto }` |
+| Operación         | Endpoint                      | Éxito | Cuerpo                                          |
+| ----------------- | ----------------------------- | ----- | ----------------------------------------------- |
+| Listar            | `GET /recursos`               | 200   | `{ datos: XFilaDto[], total, pagina, tamanio }` |
+| Obtener           | `GET /recursos/:id`           | 200   | `{ datos: XDetalleDto }`                        |
+| Crear             | `POST /recursos`              | 201   | `{ datos: XDetalleDto }`                        |
+| Editar            | `PUT /recursos/:id`           | 200   | `{ datos: XDetalleDto }`                        |
+| Eliminar          | `DELETE /recursos/:id`        | 200   | `{ datos: { baja: 'fisica' \| 'logica' } }`     |
+| Acción de negocio | `POST /recursos/:id/<accion>` | 200   | `{ datos: XDetalleDto }`                        |
 
 - `PUT` recibe el formulario completo de edición: el frontend usa un único formulario de alta y edición.
 - Los cambios de estado no se hacen con `PUT`: son acciones con nombre (`POST /ventas/:id/cancelar`,
@@ -215,15 +271,15 @@ cada ruta.
 
 Coincide con `PageQuery` del frontend.
 
-| Parámetro | Tipo | Por defecto | Notas |
-|---|---|---|---|
-| `pagina` | entero ≥ 1 | 1 | Empieza en 1 |
-| `tamanio` | entero 1 a 100 | 25 | |
-| `orden` | texto | primer valor de `ordenables` | Solo columnas de la lista blanca del módulo |
-| `direccion` | `asc` \| `desc` | `asc` | |
-| `q` | texto, máx. 100 | — | Búsqueda libre en las columnas que define el módulo |
-| Filtros | según el módulo | — | Parámetros propios (`padreId`, `estado`), declarados en el esquema |
-| `incluirInactivos` | booleano | `false` | Solo en recursos con baja lógica |
+| Parámetro          | Tipo            | Por defecto                  | Notas                                                              |
+| ------------------ | --------------- | ---------------------------- | ------------------------------------------------------------------ |
+| `pagina`           | entero ≥ 1      | 1                            | Empieza en 1                                                       |
+| `tamanio`          | entero 1 a 100  | 25                           |                                                                    |
+| `orden`            | texto           | primer valor de `ordenables` | Solo columnas de la lista blanca del módulo                        |
+| `direccion`        | `asc` \| `desc` | `asc`                        |                                                                    |
+| `q`                | texto, máx. 100 | —                            | Búsqueda libre en las columnas que define el módulo                |
+| Filtros            | según el módulo | —                            | Parámetros propios (`padreId`, `estado`), declarados en el esquema |
+| `incluirInactivos` | booleano        | `false`                      | Solo en recursos con baja lógica                                   |
 
 `esquemaPagina({ ordenables, filtros })` arma el esquema Zod y `paginar(em, entidad, query, opciones)` devuelve
 `{ datos, total, pagina, tamanio }`. Nunca se ordena por una columna que llega del cliente sin pasar por la lista
@@ -241,14 +297,14 @@ Middleware `validar({ params, body, query })` en `shared/http/validar.ts`:
 - Los parámetros numéricos de URL y query se convierten con `z.coerce`.
 - Si falla, responde 400 con `code: 'VALIDACION'` y `campos` por cada campo inválido:
 
-| Situación | Código del campo |
-|---|---|
-| Falta o es nulo cuando no se permite | `REQUERIDO` |
-| Tipo o formato incorrecto | `FORMATO_INVALIDO` |
+| Situación                                    | Código del campo                      |
+| -------------------------------------------- | ------------------------------------- |
+| Falta o es nulo cuando no se permite         | `REQUERIDO`                           |
+| Tipo o formato incorrecto                    | `FORMATO_INVALIDO`                    |
 | Texto más corto o más largo que lo permitido | `DEMASIADO_CORTO` · `DEMASIADO_LARGO` |
-| Número fuera de rango | `FUERA_DE_RANGO` |
-| Valor que no está en la lista permitida | `VALOR_NO_PERMITIDO` |
-| Campo no declarado | `CAMPO_NO_PERMITIDO` |
+| Número fuera de rango                        | `FUERA_DE_RANGO`                      |
+| Valor que no está en la lista permitida      | `VALOR_NO_PERMITIDO`                  |
+| Campo no declarado                           | `CAMPO_NO_PERMITIDO`                  |
 
 Las validaciones de forma van en el esquema. Las que necesitan la base de datos (duplicados, existencia,
 ciclos) van en el servicio.
@@ -262,7 +318,12 @@ ciclos) van en el servicio.
 Todas las respuestas de error tienen la forma que espera el frontend (`ApiError`):
 
 ```json
-{ "status": 409, "code": "CATEGORIA_CON_SUBCATEGORIAS", "mensaje": "La categoría tiene subcategorías y no puede eliminarse.", "campos": {} }
+{
+  "status": 409,
+  "code": "CATEGORIA_CON_SUBCATEGORIAS",
+  "mensaje": "La categoría tiene subcategorías y no puede eliminarse.",
+  "campos": {}
+}
 ```
 
 - `code` es estable: el frontend lo usa para elegir el texto y el lugar donde mostrarlo.
@@ -275,18 +336,18 @@ Todas las respuestas de error tienen la forma que espera el frontend (`ApiError`
 `shared/http/error-handler.ts` es el único lugar que arma respuestas de error. Los controladores no tienen
 `try/catch`: Express 5 envía al manejador los errores de las funciones `async`.
 
-| Origen | Status | `code` |
-|---|---|---|
-| `ApiError` lanzado por un servicio | El de su definición | El de su definición |
-| Validación de Zod | 400 | `VALIDACION` |
-| JSON mal formado en el body | 400 | `JSON_INVALIDO` |
-| Sin cookie de sesión o token vencido | 401 | `SESION_INVALIDA` |
-| Permiso insuficiente | 403 | `SIN_PERMISO` |
-| `NotFoundError` de MikroORM (`buscarOFallar`) | 404 | `NO_ENCONTRADO` |
-| Ruta inexistente | 404 | `RUTA_INEXISTENTE` |
-| Clave única violada | 409 | `DUPLICADO` |
-| Clave foránea violada | 409 | `EN_USO` |
-| Cualquier otro | 500 | `ERROR_INTERNO` (se registra con su stack; la respuesta no lo incluye) |
+| Origen                                        | Status              | `code`                                                                 |
+| --------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
+| `ApiError` lanzado por un servicio            | El de su definición | El de su definición                                                    |
+| Validación de Zod                             | 400                 | `VALIDACION`                                                           |
+| JSON mal formado en el body                   | 400                 | `JSON_INVALIDO`                                                        |
+| Sin cookie de sesión o token vencido          | 401                 | `SESION_INVALIDA`                                                      |
+| Permiso insuficiente                          | 403                 | `SIN_PERMISO`                                                          |
+| `NotFoundError` de MikroORM (`buscarOFallar`) | 404                 | `NO_ENCONTRADO`                                                        |
+| Ruta inexistente                              | 404                 | `RUTA_INEXISTENTE`                                                     |
+| Clave única violada                           | 409                 | `DUPLICADO`                                                            |
+| Clave foránea violada                         | 409                 | `EN_USO`                                                               |
+| Cualquier otro                                | 500                 | `ERROR_INTERNO` (se registra con su stack; la respuesta no lo incluye) |
 
 ### 5.3 Errores de negocio
 
@@ -310,11 +371,11 @@ utiliza.
 
 ### 6.2 Endpoints
 
-| Endpoint | Acceso | Respuesta |
-|---|---|---|
-| `POST /api/auth/login` | Público, con límite de intentos por IP | Cookie + `{ datos: UsuarioSesionDto }` |
-| `POST /api/auth/logout` | Público | Borra la cookie |
-| `GET /api/auth/me` | Autenticado | `{ datos: UsuarioSesionDto }` con `id`, `nombre`, `rol` y `permisos` |
+| Endpoint                | Acceso                                 | Respuesta                                                            |
+| ----------------------- | -------------------------------------- | -------------------------------------------------------------------- |
+| `POST /api/auth/login`  | Público, con límite de intentos por IP | Cookie + `{ datos: UsuarioSesionDto }`                               |
+| `POST /api/auth/logout` | Público                                | Borra la cookie                                                      |
+| `GET /api/auth/me`      | Autenticado                            | `{ datos: UsuarioSesionDto }` con `id`, `nombre`, `rol` y `permisos` |
 
 El login actualiza `ultimo_acceso` (RNS-USU-01). Ante usuario inexistente, inactivo o contraseña incorrecta, la
 respuesta es siempre la misma (401, `CREDENCIALES_INVALIDAS`), para no revelar qué dato falló.
@@ -372,11 +433,7 @@ servicio no escribe la auditoría a mano.
 
 ### 7.5 Migraciones y seeds
 
-- El esquema se modifica **solo con migraciones** de MikroORM. `schema.update` no se usa en ningún entorno.
-- Los seeders de `seeders/referencia/` cargan datos obligatorios (roles, medios de pago, canales de venta) y se
-  ejecutan en todos los entornos.
-- Los seeders de `seeders/desarrollo/` cargan datos de ejemplo para desarrollar y probar; nunca se ejecutan en
-  producción.
+- El esquema se sincroniza al arrancar con `orm.schema.update({ safe: true })`: crea tablas y columnas, pero no borra. Por ahora no se usan migraciones.
 
 ---
 
@@ -425,15 +482,15 @@ servicio no escribe la auditoría a mano.
 
 ## 12. Dependencias
 
-| Uso | Paquete |
-|---|---|
-| Validación | `zod` |
-| Contrato | `zod-openapi` (o equivalente compatible con la versión de Zod instalada) y `swagger-ui-express` |
-| Sesión | `jsonwebtoken`, `bcrypt`, `cookie-parser` |
-| Seguridad | `helmet`, `cors`, `express-rate-limit` |
-| Logs | `pino`, `pino-http`; `pino-pretty` en desarrollo |
-| Base de datos | `@mikro-orm/core`, `@mikro-orm/mysql`, `@mikro-orm/migrations`, `@mikro-orm/seeder` |
-| Tests | `vitest`, `supertest` |
+| Uso           | Paquete                                                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------- |
+| Validación    | `zod`                                                                                           |
+| Contrato      | `zod-openapi` (o equivalente compatible con la versión de Zod instalada) y `swagger-ui-express` |
+| Sesión        | `jsonwebtoken`, `bcrypt`, `cookie-parser`                                                       |
+| Seguridad     | `helmet`, `cors`, `express-rate-limit`                                                          |
+| Logs          | `pino`, `pino-http`; `pino-pretty` en desarrollo                                                |
+| Base de datos | `@mikro-orm/core`, `@mikro-orm/mysql`, `@mikro-orm/migrations`, `@mikro-orm/seeder`             |
+| Tests         | `vitest`, `supertest`                                                                           |
 
 `package.json` declara solo dependencias directas: las internas de Express que hoy aparecen listadas se quitan.
 Cualquier dependencia nueva se acuerda antes de agregarla.
