@@ -4,10 +4,12 @@ import {
   Component,
   booleanAttribute,
   computed,
+  effect,
   forwardRef,
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { InputCampo } from '../campo/campo';
@@ -76,6 +78,17 @@ export class Autocompletar<T> implements ControlValueAccessor {
   private readonly totalItems = computed(
     () => this.opciones().length + (this.mostrarCrear() ? 1 : 0),
   );
+
+  constructor() {
+    // Si el valor llega antes que su opción (opciones que se cargan después, como en un formulario de edición),
+    // muestra la etiqueta en cuanto la opción aparece.
+    effect(() => {
+      const valor = this.valor();
+      if (valor === null || this.texto()) return;
+      const opcion = this.opciones().find((o) => o.valor === valor);
+      if (opcion) untracked(() => this.texto.set(opcion.etiqueta));
+    });
+  }
 
   private alCambiar: (valor: T | null) => void = () => {};
   private alTocar: () => void = () => {};
