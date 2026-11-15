@@ -36,5 +36,6 @@
     "openapi-typescript": {
       "typescript": "$typescript"
     }
-  }
+  },
+  "sideEffects": false
 }
