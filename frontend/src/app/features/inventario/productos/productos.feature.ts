@@ -12,9 +12,4 @@ export const productosFeature: FeatureDef = {
       orden: 10,
     },
   ],
-  permisos: {
-    'productos:leer': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO', 'ADMINISTRATIVO'],
-    'productos:editar': ['GERENTE'],
-    'precios:editar': ['GERENTE'],
-  },
 };

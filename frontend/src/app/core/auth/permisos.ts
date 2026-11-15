@@ -1,11 +1,11 @@
 /**
- * Roles y permisos del sistema (arquitectura-frontend.md, sección 5.6; RNS-ROL-01 de la Etapa 3).
- * Los componentes y guards preguntan por permisos, nunca por roles.
+ * Catálogo de permisos del sistema (arquitectura-frontend.md, sección 5.6). Los componentes, los guards y el menú
+ * preguntan por permisos, nunca por roles: los roles los crea el administrador y los permisos del usuario llegan en
+ * `/api/auth/me`.
+ *
+ * Debe coincidir con `backend/src/shared/auth/permisos.ts` hasta que los tipos se generen desde el contrato OpenAPI
+ * (sección 5.10), que ya expone esta lista.
  */
-export type RolEmpleado = 'GERENTE' | 'VENDEDOR' | 'OPERARIO_DEPOSITO' | 'ADMINISTRATIVO';
-export type RolCliente = 'CLIENTE_MINORISTA' | 'CLIENTE_MAYORISTA';
-export type Rol = RolEmpleado | RolCliente;
-
 export type Permiso =
   | 'panel:leer'
   | 'ventas:registrar'
@@ -30,10 +30,3 @@ export type Permiso =
   | 'auditoria:leer'
   | 'usuarios:administrar'
   | 'parametros:editar';
-
-export const EMPLEADOS: RolEmpleado[] = [
-  'GERENTE',
-  'VENDEDOR',
-  'OPERARIO_DEPOSITO',
-  'ADMINISTRATIVO',
-];

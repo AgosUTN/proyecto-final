@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Routes } from '@angular/router';
-import { Permiso, RolEmpleado } from '@core/auth/roles';
+import { Permiso } from '@core/auth/permisos';
 
 /** Grupos del menú lateral, en el orden en que se muestran. */
 export const GRUPOS_NAV = ['Ventas', 'Inventario', 'Compras', 'Análisis', 'Configuración'] as const;
@@ -20,8 +20,9 @@ export interface NavItem {
 }
 
 /**
- * Descripción de una feature en un único archivo: rutas, menú y permisos
- * (arquitectura-frontend.md, sección 5.4, registro distribuido).
+ * Descripción de una feature en un único archivo: rutas y menú (arquitectura-frontend.md, sección 5.4, registro
+ * distribuido). Los permisos que exige se declaran en cada `NavItem` y en el `permissionGuard` de sus rutas; qué
+ * permisos tiene cada rol no se define en el frontend.
  */
 export interface FeatureDef {
   /** Segmento base de URL: 'inventario/stock'. */
@@ -29,8 +30,6 @@ export interface FeatureDef {
   /** Carga diferida de las rutas internas (loadChildren). */
   rutas: () => Promise<Routes>;
   nav?: NavItem[];
-  /** Roles que reciben cada permiso de la feature. */
-  permisos: Partial<Record<Permiso, RolEmpleado[]>>;
   /** true en la tienda: usa el shell público. */
   publica?: boolean;
 }

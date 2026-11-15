@@ -12,7 +12,4 @@ export const reportesFeature: FeatureDef = {
       orden: 20,
     },
   ],
-  permisos: {
-    'analisis:leer': ['GERENTE', 'ADMINISTRATIVO'],
-  },
 };

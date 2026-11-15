@@ -12,7 +12,4 @@ export const usuariosFeature: FeatureDef = {
       orden: 10,
     },
   ],
-  permisos: {
-    'usuarios:administrar': ['GERENTE'],
-  },
 };

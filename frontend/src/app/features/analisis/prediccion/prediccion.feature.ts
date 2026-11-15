@@ -12,7 +12,4 @@ export const prediccionFeature: FeatureDef = {
       orden: 10,
     },
   ],
-  permisos: {
-    'analisis:leer': ['GERENTE', 'ADMINISTRATIVO'],
-  },
 };

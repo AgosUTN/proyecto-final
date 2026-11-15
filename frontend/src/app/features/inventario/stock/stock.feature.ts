@@ -12,8 +12,4 @@ export const stockFeature: FeatureDef = {
       orden: 20,
     },
   ],
-  permisos: {
-    'stock:leer': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO', 'ADMINISTRATIVO'],
-    'stock:ajustar': ['GERENTE', 'OPERARIO_DEPOSITO'],
-  },
 };

@@ -12,7 +12,4 @@ export const mayoristasFeature: FeatureDef = {
       orden: 50,
     },
   ],
-  permisos: {
-    'mayoristas:administrar': ['GERENTE'],
-  },
 };

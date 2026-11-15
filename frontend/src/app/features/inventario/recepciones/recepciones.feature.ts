@@ -12,8 +12,4 @@ export const recepcionesFeature: FeatureDef = {
       orden: 40,
     },
   ],
-  permisos: {
-    'recepciones:registrar': ['GERENTE', 'OPERARIO_DEPOSITO'],
-    'recepciones:resolver': ['GERENTE', 'ADMINISTRATIVO'],
-  },
 };

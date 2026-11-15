@@ -12,7 +12,4 @@ export const pedidosFeature: FeatureDef = {
       orden: 40,
     },
   ],
-  permisos: {
-    'pedidos:gestionar': ['GERENTE', 'OPERARIO_DEPOSITO'],
-  },
 };

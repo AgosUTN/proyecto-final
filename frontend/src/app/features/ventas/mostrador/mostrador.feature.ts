@@ -12,7 +12,4 @@ export const mostradorFeature: FeatureDef = {
       orden: 10,
     },
   ],
-  permisos: {
-    'ventas:registrar': ['GERENTE', 'VENDEDOR'],
-  },
 };

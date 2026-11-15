@@ -12,7 +12,4 @@ export const sinRotacionFeature: FeatureDef = {
       orden: 30,
     },
   ],
-  permisos: {
-    'analisis:leer': ['GERENTE', 'ADMINISTRATIVO'],
-  },
 };

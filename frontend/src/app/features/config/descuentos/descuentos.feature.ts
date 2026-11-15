@@ -12,7 +12,4 @@ export const descuentosFeature: FeatureDef = {
       orden: 30,
     },
   ],
-  permisos: {
-    'descuentos:editar': ['GERENTE'],
-  },
 };

@@ -12,8 +12,4 @@ export const historialFeature: FeatureDef = {
       orden: 30,
     },
   ],
-  permisos: {
-    'ventas:leer': ['GERENTE', 'VENDEDOR', 'ADMINISTRATIVO'],
-    'ventas:cancelar': ['GERENTE'],
-  },
 };

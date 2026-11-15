@@ -12,7 +12,4 @@ export const redesSocialesFeature: FeatureDef = {
       orden: 20,
     },
   ],
-  permisos: {
-    'ventas:registrar': ['GERENTE', 'VENDEDOR'],
-  },
 };

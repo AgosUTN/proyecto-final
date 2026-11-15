@@ -12,7 +12,4 @@ export const parametrosFeature: FeatureDef = {
       orden: 40,
     },
   ],
-  permisos: {
-    'parametros:editar': ['GERENTE'],
-  },
 };

@@ -12,7 +12,4 @@ export const facturacionFeature: FeatureDef = {
       orden: 70,
     },
   ],
-  permisos: {
-    'ventas:leer': ['GERENTE', 'VENDEDOR', 'ADMINISTRATIVO'],
-  },
 };

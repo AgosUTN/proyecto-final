@@ -4,5 +4,4 @@ import { FeatureDef } from '@core/navigation/feature.types';
 export const sistemaFeature: FeatureDef = {
   ruta: 'sistema',
   rutas: () => import('./sistema.routes').then((m) => m.default),
-  permisos: {},
 };

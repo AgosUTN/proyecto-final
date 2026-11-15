@@ -12,7 +12,4 @@ export const auditoriaFeature: FeatureDef = {
       orden: 50,
     },
   ],
-  permisos: {
-    'auditoria:leer': ['GERENTE'],
-  },
 };

@@ -12,7 +12,4 @@ export const ordenesFeature: FeatureDef = {
       orden: 10,
     },
   ],
-  permisos: {
-    'compras:gestionar': ['GERENTE', 'ADMINISTRATIVO'],
-  },
 };

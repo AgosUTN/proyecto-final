@@ -5,7 +5,6 @@ const feature = (nav: FeatureDef['nav']): FeatureDef => ({
   ruta: 'x',
   rutas: async () => [],
   nav,
-  permisos: {},
 });
 
 describe('construirMenu', () => {

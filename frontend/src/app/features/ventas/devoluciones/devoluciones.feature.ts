@@ -12,9 +12,4 @@ export const devolucionesFeature: FeatureDef = {
       orden: 60,
     },
   ],
-  permisos: {
-    'devoluciones:registrar': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO'],
-    'devoluciones:verificar': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO'],
-    'devoluciones:evaluar': ['GERENTE'],
-  },
 };

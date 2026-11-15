@@ -12,7 +12,4 @@ export const proveedoresFeature: FeatureDef = {
       orden: 20,
     },
   ],
-  permisos: {
-    'proveedores:gestionar': ['GERENTE', 'ADMINISTRATIVO'],
-  },
 };
