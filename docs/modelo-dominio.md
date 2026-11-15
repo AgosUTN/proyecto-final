@@ -39,7 +39,7 @@ Clasificación jerárquica de productos. Permite análisis ABC y filtrado en cat
 |---|---|---|---|
 | `nombre` | String | sí | Ej: Artículos de Cocina |
 | `descripcion` | String | sí |  |
-| `activo` | Boolean | sí |  |
+| `activo` | Boolean | sí | Baja lógica: falso cuando se elimina una categoría referenciada por algún producto |
 
 **Relaciones**
 
@@ -559,7 +559,7 @@ Credencial de acceso. Auditoría, permisos, trazabilidad.
 | `email` | String | sí |  |
 | `hash_contrasena` | String | no | Jamás plaintext |
 | `activo` | Boolean | sí |  |
-| `ultimo_acceso` | Timestamp | sí |  |
+| `ultimo_acceso` | Timestamp | no | Nulo hasta el primer inicio de sesión |
 
 **Relaciones**
 
@@ -575,14 +575,15 @@ Credencial de acceso. Auditoría, permisos, trazabilidad.
 
 ### ROL
 
-[CATÁLOGO] Define permisos y funcionalidades. Control de acceso basado en roles.
+Maestro administrable: el administrador crea cada rol con el nombre y los permisos que decide. La autorización de
+cada endpoint verifica si el usuario tiene el permiso que la ruta exige, nunca el nombre del rol.
 
 | Atributo | Tipo | Obligatorio | Notas |
 |---|---|---|---|
 | `id_rol` | Integer | sí | [PK] |
-| `nombre` | Enum | sí | GERENTE \| VENDEDOR \| OPERARIO_DEPOSITO \| ADMINISTRATIVO |
+| `nombre` | String | sí | Definido por el administrador |
 | `descripcion` | String | sí |  |
-| `permisos` | JSON | sí | Array de permisos |
+| `permisos` | JSON | sí | Array de códigos del catálogo de permisos del sistema (los que exigen los endpoints) |
 
 **Relaciones**
 
