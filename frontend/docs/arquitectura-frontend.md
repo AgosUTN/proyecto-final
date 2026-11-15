@@ -8,7 +8,7 @@ implementarla.
 
 | Dato | Valor |
 |---|---|
-| Versión | 1.4 — 15/11/2026 (roles administrables: sin roles fijos en el código; los permisos del usuario llegan en `/api/auth/me`) |
+| Versión | 1.5 — 15/11/2026 (alineada con el código: contrato generado con `npm run contrato`, permisos derivados del contrato, rutas reales y estado de las features) |
 | Framework | Angular 22 (standalone, zoneless, signals) |
 | Guía visual obligatoria | [`design-system.md`](./design-system.md) y mockups de [`docs/mockups/`](./mockups/README.md) |
 | Referencia analizada | [AgosUTN/App-web](https://github.com/AgosUTN/App-web) (`Front_V2`, Angular 21) |
@@ -23,7 +23,7 @@ implementarla.
 3. [Qué se conserva de la referencia](#3-qué-se-conserva-de-la-referencia)
 4. [Mejoras incorporadas](#4-mejoras-incorporadas)
 5. [Arquitectura propuesta](#5-arquitectura-propuesta)
-6. [Features del alcance actual](#6-features-del-alcance-actual)
+6. [Features del sistema](#6-features-del-sistema)
 7. [Plantilla de una feature](#7-plantilla-de-una-feature)
 8. [Convenciones](#8-convenciones)
 9. [Testing](#9-testing)
@@ -57,9 +57,8 @@ sociales, y control de stock en papel. Los problemas que el sistema resuelve (En
 
 ### 1.3 Alcance de esta entrega
 
-**El modelo de dominio completo (36 clases), sin integraciones externas**, con una única excepción: **Mercado
-Pago, que se incorpora al final**. El detalle por proceso, el orden de construcción y la división del trabajo
-están en [`docs/plan-de-desarrollo.md`](../../docs/plan-de-desarrollo.md).
+**El modelo de dominio completo** ([`docs/modelo-dominio.md`](../../docs/modelo-dominio.md)) **y las integraciones
+externas que figuran en la tabla.** Mercado Pago se incorpora al final (sección 5.13).
 
 | Módulo | Casos de uso (Etapa 3) |
 |---|---|
@@ -181,12 +180,12 @@ Cada mejora cita el archivo de App-web que la motiva.
 | 3 | Herencia entre componentes: `LibrosUpdate extends LibrosCreate` redefine el formulario y usa el template del padre | `libros-update.ts`, `basePagedComponent.ts` | Composición: un `form-page` por entidad con modo alta o edición según la ruta; el estado de tabla es una función componible |
 | 4 | El guard confía en `localStorage('rol')`, editable por el usuario; parpadeo al vencer el token | `auth.guard.ts`, `auth-service.ts` | `AuthStore` con el usuario en un signal, cargado desde `/api/auth/me` al iniciar; permisos por acción |
 | 5 | Roles repetidos en las rutas, en `MenuService` y en `isAdmin()`; íconos como strings de SVG | `menu-service.ts`, `app.routes.ts` | Cada feature declara sus rutas y sus ítems de menú, con el permiso que exige cada uno, en un solo archivo (`<feature>.feature.ts`); `core` los reúne. Sin listas repetidas ni archivos centrales que todos editen |
-| 6 | `shared` importa diálogos de las features | `dialog-service.ts` | Reglas de dependencia explícitas y verificadas con ESLint (sección 5.3) |
+| 6 | `shared` importa diálogos de las features | `dialog-service.ts` | Reglas de dependencia explícitas (sección 5.3), controladas en la revisión de cada cambio |
 | 7 | Cada componente repite su `switch (status)` para traducir errores | `libros-create.ts`, `step2-component.ts` | Catálogo único `code → mensaje` y helper `applyServerErrors(form, error)` |
 | 8 | Errores 0, 400 y 500 redirigen a `/error/:code` | `error.interceptor.ts` | Aviso dentro del panel afectado con acción «Reintentar»; página de error solo para rutas inexistentes o sin permiso |
 | 9 | El HTML de cada listado está duplicado para escritorio y celular; breakpoint repetido en dos lugares | `libros-read.html`, `viewport-service.ts`, `main-layout-component.ts` | `<app-tabla>` que resuelve ambas vistas (en teléfono apila las filas); breakpoints únicos en `styles/_mixins.scss` y, si hace falta en TypeScript, `BreakpointObserver` del CDK |
 | 10 | SVG copiado en cada botón y esqueleto escrito celda por celda | `libros-read.html`, `iconPaths.ts` | Componentes de `shared/ui` y `<app-icono>` con un registro propio de íconos, sin dependencias |
-| 11 | `any` en interceptors, `!` en formularios, interfaces de respuesta duplicadas, constantes copiadas de la API | `cache.interceptor.ts`, `apiResponseGet.model.ts`, `crudNames.config.ts` | `ApiResponse<T>` y `Paginado<T>` únicos, formularios tipados y tipos generados desde el OpenAPI del backend |
+| 11 | `any` en interceptors, `!` en formularios, interfaces de respuesta duplicadas, constantes copiadas de la API | `cache.interceptor.ts`, `apiResponseGet.model.ts`, `crudNames.config.ts` | `Respuesta<T>` y `Paginado<T>` únicos, formularios tipados y tipos generados desde el OpenAPI del backend |
 | 12 | Paginación con cinco parámetros sueltos; el estado no queda en la URL | `baseCrudService.ts` | Objeto `PageQuery` sincronizado con los query params |
 | 13 | Caché global acoplada al router; se borra completa | `cache-service.ts`, `crud-tracking-service.ts` | Sin caché al inicio; cuando haga falta, caché por recurso invalidada por etiqueta |
 | 14 | IP fija en el entorno (`192.168.100.8`) y carpeta `enviroments` mal escrita | `enviroment.ts` | URLs relativas `/api` y `/ds-api`, con `proxy.conf.json` en desarrollo y nginx en producción |
@@ -226,10 +225,11 @@ frontend/src/
    │  ├─ auth/                 auth.store.ts · auth.api.ts · auth.guard.ts · permission.guard.ts
    │  │                        permisos.ts · can.directive.ts
    │  ├─ http/                 api-base.interceptor.ts · credentials.interceptor.ts · error.interceptor.ts
-   │  │                        api-error.ts · error-catalog.ts · generated/ (tipos del contrato OpenAPI)
+   │  │                        api-error.ts · error-catalog.ts · generated/ (tipos del contrato, `npm run contrato`)
    │  ├─ navigation/           feature.types.ts · navegacion.ts · breadcrumbs.ts
    │  ├─ formatters/           ars.pipe.ts · porcentaje.pipe.ts · fecha.pipe.ts (es-AR)
-   │  └─ estados/              estados.ts (estado backend → texto y tono de <app-sello>)
+   │  └─ estados/              estados.ts (estado backend → texto y tono de <app-sello>); pendiente:
+   │                           se crea con la primera feature que muestre estados
    │
    ├─ layout/                  shell interno (con barra superior) · sidebar · breadcrumbs · errores/
    │                           shell público de la tienda (pendiente)
@@ -240,7 +240,8 @@ frontend/src/
    │  │                        skeleton) · selectores · dialogo · toast · icono · pagina-pendiente
    │  │                        menu-acciones · barra-acciones
    │  ├─ data-access/          api.types.ts (Respuesta, Paginado, Baja) · crud-api.ts · page-query.ts
-   │  └─ forms/                validators/ · server-errors.ts
+   │  └─ forms/                server-errors.ts · validators/ (pendiente: se crea con el primer
+   │                           validador propio)
    │
    └─ features/
       ├─ auth/                 login de empleados y de clientes
@@ -270,7 +271,8 @@ frontend/src/
       │  ├─ descuentos/        promociones y descuentos
       │  └─ parametros/        canales, medios de pago, política de devolución, tarifas de envío
       ├─ tienda/               rutas públicas: catálogo, ficha, carrito, checkout
-      └─ mi-cuenta/            portal del cliente: pedidos, devoluciones, cuenta corriente (mayoristas)
+      ├─ mi-cuenta/            portal del cliente: pedidos, devoluciones, cuenta corriente (mayoristas)
+      └─ sistema/              guía viva de los componentes de shared/ui (solo en desarrollo)
 ```
 
 Las rutas son las de la sección 6. La cabecera de página (`app-cabecera`) vive en `shared/ui` y no en `layout/`,
@@ -315,7 +317,8 @@ features/<feature>/
 
 - Si dos features necesitan lo mismo, se sube a `shared` (si es genérico) o a `core` (si es un singleton).
 - Aliases en `tsconfig.json`: `@core/*`, `@shared/*`, `@features/*`, `@layout/*`. No se usan rutas `../../../`.
-- Verificación automática con `eslint-plugin-boundaries`; una violación hace fallar el lint.
+- El proyecto no tiene ESLint configurado: estas reglas se controlan en la revisión de cada cambio. Incorporar
+  `eslint-plugin-boundaries` requiere acordar la dependencia.
 
 ### 5.4 Registro distribuido de features
 
@@ -360,7 +363,6 @@ export const stockFeature: FeatureDef = {
 ```ts
 // app.features.ts — único archivo compartido: una línea por feature
 export const FEATURES_APP: FeatureDef[] = [
-  authFeature,
   panelFeature,
   mostradorFeature,
   stockFeature,
@@ -372,19 +374,26 @@ export const FEATURES_APP: FeatureDef[] = [
 ```ts
 // app.routes.ts — se arma a partir de FEATURES_APP
 export const routes: Routes = [
-  ...FEATURES_APP.filter((f) => f.publica).map((f) => ({ path: f.ruta, component: ShellPublico, loadChildren: f.rutas })),
+  { path: 'login', canActivate: [invitadoGuard], loadChildren: () => import('@features/auth/auth.routes') },
   {
     path: '',
     component: Shell,
     canActivate: [authGuard],
-    // Ordenadas de la más específica a la más general ('ventas/mostrador' antes que 'ventas').
-    // Cada ruta lleva como miga el grupo de su NavItem, no navegable.
-    children: internas.sort(porEspecificidad).map(rutaDeFeature),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'panel' },
+      // Ordenadas de la más específica a la más general ('ventas/mostrador' antes que 'ventas').
+      // Cada ruta lleva como miga el grupo de su NavItem, no navegable.
+      ...internas.map(rutaDeFeature),
+      { path: 'sin-permiso', loadComponent: () => import('@layout/errores/sin-permiso-page') },
+      { path: '**', loadComponent: () => import('@layout/errores/no-encontrado-page') },
+    ],
   },
-  { path: 'sin-permiso', loadComponent: () => import('@layout/errores/sin-permiso-page') },
-  { path: '**', loadComponent: () => import('@layout/errores/no-encontrado-page') },
 ];
 ```
+
+El login no es una feature del registro: tiene su ruta propia, fuera del shell. Las páginas de error van dentro
+del shell, para que conserven el menú. El shell público de la tienda (features con `publica: true`) se agrega
+junto con la tienda.
 
 Las rutas internas de cada feature siguen en su `<feature>.routes.ts`:
 
@@ -403,7 +412,7 @@ export default [
 ### 5.5 Navegación
 
 `core/navigation/navegacion.ts` reúne los `nav` de todas las features, los ordena por grupo y `orden`, y los filtra
-según los permisos del usuario (el filtro se activa cuando exista `AuthStore`). De ahí sale el menú lateral. No
+según los permisos del usuario (`AuthStore.puede`). De ahí sale el menú lateral. No
 existe una lista central de ítems.
 
 Las migas (`core/navigation/breadcrumbs.ts`) se arman desde el árbol de rutas activo: el grupo de la feature como
@@ -436,8 +445,9 @@ export class AuthStore {
 
 **Permisos por acción.** Los componentes, los guards y el menú preguntan por permisos, nunca por roles. Los permisos
 del usuario son los de su rol y llegan en `/api/auth/me`: el frontend no los deduce. Un rol inactivo llega con la
-lista vacía. El catálogo de códigos vive en `core/auth/permisos.ts` y coincide con el del backend
-(`backend/src/shared/auth/permisos.ts`) hasta que se genere desde el contrato (sección 5.10).
+lista vacía. El catálogo de códigos se define en el backend (`backend/src/shared/auth/permisos.ts`). En el frontend,
+el tipo `Permiso` de `core/auth/permisos.ts` se deriva del contrato generado (sección 5.10): un permiso nuevo llega
+al regenerar los tipos, sin copiarlo a mano.
 
 **Configuración de referencia de los roles iniciales.** La tabla resume los perfiles de RNS-ROL-01 y sirve para
 configurar los primeros roles desde la pantalla de usuarios y roles. No forma parte del código: cada rol tiene los
@@ -494,16 +504,20 @@ Ocultar un botón no reemplaza la validación: el backend controla cada permiso.
 | 2 | `credentialsInterceptor` | `withCredentials: true` |
 | 3 | `errorInterceptor` | Convierte `HttpErrorResponse` en `ApiError`; resuelve 401 y 403; deja pasar el resto |
 
-**Contrato de error** a acordar con el backend (App-web no lo tenía estandarizado):
+**Contrato de error.** Lo define el backend (convenciones de la API, sección 5) y su forma llega en el contrato
+generado (`components['schemas']['ApiError']`). El `errorInterceptor` convierte toda respuesta fallida en esta clase:
 
 ```ts
-export interface ApiError {
-  status: number;
-  code: string;                              // 'SKU_DUPLICADO', 'STOCK_INSUFICIENTE', 'VALIDACION'…
-  mensaje: string;                           // texto técnico; la interfaz usa el catálogo
-  campos?: Record<string, string>;           // errores por campo: { sku: 'SKU_DUPLICADO' }
+// core/http/api-error.ts
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string;                     // 'CATEGORIA_NOMBRE_DUPLICADO', 'VALIDACION'…
+  readonly campos?: Record<string, string>;  // errores por campo: { nombre: 'CATEGORIA_NOMBRE_DUPLICADO' }
+  // message: el mensaje técnico del backend; la interfaz usa el catálogo
 }
 ```
+
+Una solicitud que no llega al servidor se convierte en `ApiError` con status 0 y `code: 'SIN_CONEXION'`.
 
 **Dónde se muestra cada error:**
 
@@ -574,11 +588,18 @@ export class ProductosApi {
 
 ### 5.10 Tipos compartidos con el backend
 
-- El backend expone su contrato en OpenAPI. Los tipos del frontend se generan con `openapi-typescript` en
-  `core/http/generated/` y no se editan a mano.
-- Los DTOs de cada feature reexportan o adaptan esos tipos.
-- Las constantes compartidas (estados, códigos de error) salen del mismo contrato; no se copian a mano entre
-  proyectos.
+- El backend publica su contrato en `/api/openapi.json`. Los tipos del frontend se generan con `npm run contrato`
+  (`openapi-typescript`) en `core/http/generated/api.d.ts`. El archivo se commitea y no se edita a mano.
+- Dentro de Docker Compose, con el backend levantado:
+  `docker compose exec -e API_CONTRATO=http://backend:3000/api/openapi.json frontend npm run contrato`.
+  Sin `API_CONTRATO`, el script usa `http://localhost:3000/api/openapi.json`, que solo responde fuera del contenedor.
+- Se regenera después de cada cambio del backend en esquemas, DTOs, rutas, códigos de error o permisos, y antes de
+  trabajar en la feature que los usa. Lo que haya quedado incompatible aparece como error de compilación.
+- Los DTOs de cada feature son alias de esos tipos, en `data-access/models/`:
+  `export type CategoriaFilaDto = components['schemas']['CategoriaFila'];`
+- Del contrato salen también el tipo `Permiso` (sección 5.6), la forma de `ApiError` (sección 5.7) y los valores
+  de los estados. Los textos de los códigos de error no: cada código nuevo se agrega a mano en
+  `core/http/error-catalog.ts`, con un texto según `CLAUDE.md`.
 
 ### 5.11 Interfaz
 
@@ -606,7 +627,8 @@ campo, `role="img"` con descripción en gráficos y estados con texto además de
 
 ### 5.12 Entornos y despliegue
 
-El frontend usa siempre rutas relativas. No hay IP ni dominio en el código.
+El frontend usa siempre rutas relativas. No hay IP ni dominio en el código. Los archivos de `src/environments/`
+quedaron de la plantilla inicial y no se usan: las URLs de las API no se leen de ahí.
 
 ```json
 // frontend/proxy.conf.json (desarrollo, dentro de Docker Compose)
@@ -630,7 +652,7 @@ mantiene.
 
 - Se usa en el checkout de la tienda (CUU2.1), en el POS para débito y crédito (CUU1.2) y en los reintegros de
   devoluciones cobradas por esa vía (CUU10.3).
-- Hasta la fase 7 del plan, el backend expone un procesador de pago simulado con el mismo contrato; el frontend
+- Hasta que se implemente la integración, el backend expone un procesador de pago simulado con el mismo contrato; el frontend
   no cambia al reemplazarlo.
 - El frontend nunca maneja credenciales ni datos de tarjeta: el backend crea la operación y el frontend muestra
   su estado (pendiente, aprobado, rechazado).
@@ -641,7 +663,8 @@ mantiene.
 
 ## 6. Features del sistema
 
-El orden en que se construyen y su responsable están en el plan de desarrollo.
+Implementadas: `auth` (inicio de sesión de empleados) y `config/categorias`. El resto muestra `PaginaPendiente`
+hasta que se implementa.
 
 | Feature | Ruta | Pantallas principales | Casos de uso | Permiso de acceso |
 |---|---|---|---|---|
@@ -666,6 +689,7 @@ El orden en que se construyen y su responsable están en el plan de desarrollo.
 | `config/*` | `/config/...` | Usuarios, categorías, descuentos, parámetros | CUU9.3 | `usuarios:administrar`, `parametros:editar`, `descuentos:editar` |
 | `tienda` | `/tienda` | Catálogo, ficha, carrito con reserva, checkout (requiere propuesta visual propia) | CUU2.1 | Público |
 | `mi-cuenta` | `/mi-cuenta` | Pedidos, devoluciones y, para mayoristas, cuenta corriente | CUU2.3, CUU7.3, CUU10.1 | Sesión de cliente (pendiente, sección 5.6) |
+| `sistema` | `/sistema` | Guía viva de los componentes de `shared/ui` | — | Solo en desarrollo |
 
 Atajos del mostrador: `F2` búsqueda, `F4` cliente, `F8` medio de pago, `F12` cobrar, `Esc` quitar la
 última línea.
@@ -678,6 +702,7 @@ Ejemplo completo: `inventario/stock`.
 
 ```
 features/inventario/stock/
+├─ stock.feature.ts
 ├─ stock.routes.ts
 ├─ data-access/
 │  ├─ stock.api.ts
@@ -698,8 +723,9 @@ features/inventario/stock/
 - [ ] `<feature>.routes.ts` con `export default` y `permissionGuard` en cada ruta.
 - [ ] `<feature>.feature.ts` con rutas e ítems de menú, cada uno con su permiso.
 - [ ] Feature agregada en `app.features.ts` (una línea).
-- [ ] Permisos nuevos agregados al catálogo del backend (`shared/auth/permisos.ts`) y a `core/auth/permisos.ts`.
-- [ ] DTOs basados en los tipos generados del backend.
+- [ ] Permisos nuevos agregados al catálogo del backend (`shared/auth/permisos.ts`) y tipos regenerados.
+- [ ] Tipos regenerados con `npm run contrato` después del último cambio del backend; DTOs como alias de esos tipos.
+- [ ] Ruta de `PaginaPendiente` reemplazada por la página real.
 - [ ] `.api.ts` sin lógica de pantalla; las `pages` no llaman a `HttpClient` directamente.
 - [ ] Estados de carga (esqueleto), vacío y error con «Reintentar» en cada panel.
 - [ ] Códigos de error nuevos agregados al catálogo con su texto.
@@ -722,7 +748,7 @@ features/inventario/stock/
 | Suscripciones | Se evitan; si son necesarias, `takeUntilDestroyed()` |
 | Estilos | Solo tokens `var(--…)`; sin hexadecimales; estilos de componente encapsulados, salvo `shared/ui`, cuyos estilos son globales (`design-system.md`, «Arquitectura de estilos») |
 | Textos de interfaz | Reglas de `CLAUDE.md`: formales, impersonales, botones en infinitivo |
-| Formato de código | Prettier (configuración del repo) + ESLint (`angular-eslint` y `eslint-plugin-boundaries`) |
+| Formato de código | Prettier (`.prettierrc` del repo). ESLint no está configurado (sección 5.3) |
 | Commits | Conventional Commits en una línea, según `CLAUDE.md` |
 
 ---
@@ -732,7 +758,7 @@ features/inventario/stock/
 | Qué | Herramienta | Alcance |
 |---|---|---|
 | Stores, pipes, guards, mapeo de errores, `PageQuery` | Vitest | Obligatorio para todo lo nuevo en `core` y `shared/data-access` |
-| Componentes de `shared/ui` críticos (`tabla`, `sello`, `campo`) | Vitest + Angular Testing Library | Comportamiento visible, no detalles internos |
+| Componentes de `shared/ui` críticos (`tabla`, `sello`, `campo`, `autocompletar`) | Vitest con `TestBed` | Comportamiento visible, no detalles internos |
 
 No se escriben tests end to end. Los archivos `.spec.ts` vacíos no se commitean.
 
