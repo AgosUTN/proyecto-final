@@ -408,7 +408,7 @@ utiliza.
   siendo válida, pero `requirePermission` responde 403 y `/auth/me` devuelve la lista de permisos vacía.
 - El primer usuario lo crea el backend al arrancar (administrador inicial, sección 7.5).
 - El catálogo de permisos, es decir, los que exigen los endpoints, vive en `shared/auth/permisos.ts` y es la misma
-  lista que usa el frontend (tipo `Permiso` de `frontend/src/app/core/auth/roles.ts`). `/auth/me` devuelve los
+  lista que usa el frontend (tipo `Permiso` de `frontend/src/app/core/auth/permisos.ts`). `/auth/me` devuelve los
   permisos del usuario para que el frontend no tenga que deducirlos.
 
 ---

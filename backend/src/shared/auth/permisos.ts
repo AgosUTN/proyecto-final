@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Catálogo de permisos del sistema: los que exigen los endpoints (convenciones, sección 6.3). Es la misma lista que
- * usa el frontend (tipo `Permiso` de `frontend/src/app/core/auth/roles.ts`). Qué permisos tiene cada rol no se define
+ * usa el frontend (tipo `Permiso` de `frontend/src/app/core/auth/permisos.ts`). Qué permisos tiene cada rol no se define
  * en código: lo decide el administrador al crear el rol (`ROL.permisos`).
  */
 export const PERMISOS = [

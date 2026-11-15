@@ -8,7 +8,7 @@ implementarla.
 
 | Dato | Valor |
 |---|---|
-| Versión | 1.3 — 14/11/2026 (sistema de diseño «Parte comercial» implementado; reemplaza a la guía visual anterior; Mercado Libre, ARCA y Andreani dentro del alcance) |
+| Versión | 1.4 — 15/11/2026 (roles administrables: sin roles fijos en el código; los permisos del usuario llegan en `/api/auth/me`) |
 | Framework | Angular 22 (standalone, zoneless, signals) |
 | Guía visual obligatoria | [`design-system.md`](./design-system.md) y mockups de [`docs/mockups/`](./mockups/README.md) |
 | Referencia analizada | [AgosUTN/App-web](https://github.com/AgosUTN/App-web) (`Front_V2`, Angular 21) |
@@ -87,16 +87,22 @@ documentos cargados a mano y avisos visibles en la aplicación en lugar de corre
 
 ### 1.4 Roles
 
-Fuente de verdad: **RNS-ROL-01 de la Etapa 3**.
+Los roles no son fijos: el administrador los crea con un nombre y los permisos que elige (modelo de dominio, `ROL`).
+El frontend solo conoce el catálogo de permisos (`core/auth/permisos.ts`) y los permisos del usuario, que llegan en
+`/api/auth/me`.
 
-| Rol | Descripción |
+Los perfiles de RNS-ROL-01 (Etapa 3) sirven de referencia para configurar los roles iniciales:
+
+| Perfil | Descripción |
 |---|---|
-| `GERENTE` | Acceso total, autoriza operaciones especiales, consulta reportes |
-| `VENDEDOR` | Registra ventas, modifica precios puntuales, sin acceso a finanzas |
-| `OPERARIO_DEPOSITO` | Stock, recepción, movimientos, preparación y despacho de pedidos |
-| `ADMINISTRATIVO` | Compras, pagos, documentos, reportes operacionales |
-| `CLIENTE_MINORISTA` | Consulta el estado de sus pedidos (fuera del alcance actual) |
-| `CLIENTE_MAYORISTA` | Consulta historial, pagos pendientes y crédito (fuera del alcance actual) |
+| Gerente | Acceso total, autoriza operaciones especiales, consulta reportes |
+| Vendedor | Registra ventas, modifica precios puntuales, sin acceso a finanzas |
+| Operario de depósito | Stock, recepción, movimientos, preparación y despacho de pedidos |
+| Administrativo | Compras, pagos, documentos, reportes operacionales |
+| Cliente minorista | Consulta el estado de sus pedidos (fuera del alcance actual) |
+| Cliente mayorista | Consulta historial, pagos pendientes y crédito (fuera del alcance actual) |
+
+La configuración de permisos sugerida para cada perfil está en la sección 5.6.
 
 ### 1.5 Reglas de negocio que impactan en la interfaz
 
@@ -174,7 +180,7 @@ Cada mejora cita el archivo de App-web que la motiva.
 | 2 | Uso de `cdr.detectChanges()` y `markForCheck()` en casi todos los componentes | `libros-read.ts`, `libros-create.ts`, `prestamos-create.ts` | Estado en `signal` y `computed`; lecturas con `httpResource`. Angular 22 es zoneless por defecto, así que esta mejora es obligatoria |
 | 3 | Herencia entre componentes: `LibrosUpdate extends LibrosCreate` redefine el formulario y usa el template del padre | `libros-update.ts`, `basePagedComponent.ts` | Composición: un `form-page` por entidad con modo alta o edición según la ruta; el estado de tabla es una función componible |
 | 4 | El guard confía en `localStorage('rol')`, editable por el usuario; parpadeo al vencer el token | `auth.guard.ts`, `auth-service.ts` | `AuthStore` con el usuario en un signal, cargado desde `/api/auth/me` al iniciar; permisos por acción |
-| 5 | Roles repetidos en las rutas, en `MenuService` y en `isAdmin()`; íconos como strings de SVG | `menu-service.ts`, `app.routes.ts` | Cada feature declara sus rutas, ítems de menú y permisos en un solo archivo (`<feature>.feature.ts`); `core` los reúne. Sin listas repetidas ni archivos centrales que todos editen |
+| 5 | Roles repetidos en las rutas, en `MenuService` y en `isAdmin()`; íconos como strings de SVG | `menu-service.ts`, `app.routes.ts` | Cada feature declara sus rutas y sus ítems de menú, con el permiso que exige cada uno, en un solo archivo (`<feature>.feature.ts`); `core` los reúne. Sin listas repetidas ni archivos centrales que todos editen |
 | 6 | `shared` importa diálogos de las features | `dialog-service.ts` | Reglas de dependencia explícitas y verificadas con ESLint (sección 5.3) |
 | 7 | Cada componente repite su `switch (status)` para traducir errores | `libros-create.ts`, `step2-component.ts` | Catálogo único `code → mensaje` y helper `applyServerErrors(form, error)` |
 | 8 | Errores 0, 400 y 500 redirigen a `/error/:code` | `error.interceptor.ts` | Aviso dentro del panel afectado con acción «Reintentar»; página de error solo para rutas inexistentes o sin permiso |
@@ -218,7 +224,7 @@ frontend/src/
    │
    ├─ core/                    ← singletons; sin pantallas de negocio
    │  ├─ auth/                 auth.store.ts · auth.api.ts · auth.guard.ts · permission.guard.ts
-   │  │                        roles.ts · permisos.registry.ts · can.directive.ts
+   │  │                        permisos.ts · can.directive.ts
    │  ├─ http/                 api-base.interceptor.ts · credentials.interceptor.ts · error.interceptor.ts
    │  │                        api.types.ts · api-error.ts · error-catalog.ts
    │  ├─ navigation/           feature.types.ts · navegacion.ts · breadcrumbs.ts
@@ -274,7 +280,7 @@ Estructura interna de cada feature:
 
 ```
 features/<feature>/
-├─ <feature>.feature.ts       rutas, ítems de menú y permisos de la feature (registro distribuido)
+├─ <feature>.feature.ts       rutas e ítems de menú de la feature, con su permiso (registro distribuido)
 ├─ <feature>.routes.ts
 ├─ data-access/
 │  ├─ <feature>.api.ts         llamadas HTTP tipadas
@@ -310,18 +316,20 @@ features/<feature>/
 
 ### 5.4 Registro distribuido de features
 
-Cada feature se describe a sí misma en un único archivo. Así, sumar una feature no obliga a editar listas de rutas,
-menú o permisos que el resto del equipo también modifica: el único archivo compartido es `app.features.ts`, con una
-línea por feature, y sus conflictos son triviales.
+Cada feature se describe a sí misma en un único archivo. Así, sumar una feature no obliga a editar listas de rutas
+o de menú que el resto del equipo también modifica: el único archivo compartido es `app.features.ts`, con una línea
+por feature, y sus conflictos son triviales.
+
+Los permisos que exige una feature se declaran en cada `NavItem` y en el `permissionGuard` de sus rutas. Qué permisos
+tiene cada rol no se define en el frontend: lo decide el administrador (sección 5.6).
 
 ```ts
 // core/navigation/feature.types.ts
 export interface FeatureDef {
-  ruta: string;                                         // segmento base: 'inventario/stock'
-  rutas: () => Promise<Routes>;                         // carga diferida (loadChildren)
-  nav?: NavItem[];                                      // ítems del menú lateral
-  permisos: Partial<Record<Permiso, RolEmpleado[]>>;    // qué roles reciben cada permiso de la feature
-  publica?: boolean;                                    // true en la tienda: usa el shell público
+  ruta: string;                    // segmento base: 'inventario/stock'
+  rutas: () => Promise<Routes>;    // carga diferida (loadChildren)
+  nav?: NavItem[];                 // ítems del menú lateral
+  publica?: boolean;               // true en la tienda: usa el shell público
 }
 
 export interface NavItem {
@@ -343,10 +351,6 @@ export const stockFeature: FeatureDef = {
   nav: [
     { ruta: '/inventario/stock', etiqueta: 'Stock y variantes', grupo: 'Inventario', permiso: 'stock:leer', orden: 20 },
   ],
-  permisos: {
-    'stock:leer': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO', 'ADMINISTRATIVO'],
-    'stock:ajustar': ['GERENTE', 'OPERARIO_DEPOSITO'],
-  },
 };
 ```
 
@@ -407,7 +411,8 @@ primera miga no navegable y luego `data.breadcrumb` de cada ruta (texto o funci�
 
 **Flujo:**
 
-1. El login envía las credenciales; el backend responde con la cookie httpOnly y los datos del usuario.
+1. El login envía las credenciales; el backend responde con la cookie httpOnly y los datos del usuario, con sus
+   permisos.
 2. Al iniciar la aplicación, `provideAppInitializer` consulta `/api/auth/me` y carga el `AuthStore`.
    Sin sesión válida, el usuario queda como anónimo y el guard redirige a `/login?volver=<ruta>`.
 3. Los guards y el menú leen el `AuthStore`. **Nunca** `localStorage`.
@@ -420,21 +425,24 @@ export class AuthStore {
   private readonly _usuario = signal<UsuarioSesion | null>(null);
   readonly usuario = this._usuario.asReadonly();
   readonly autenticado = computed(() => this._usuario() !== null);
-  readonly permisos = computed(() => permisosDe(this._usuario()?.rol));
+  readonly permisos = computed(() => new Set(this._usuario()?.permisos ?? []));   // los de /api/auth/me
   puede(permiso: Permiso): boolean { return this.permisos().has(permiso); }
   // iniciar(), cerrarSesion(), cargarSesion()…
 }
 ```
 
-**Permisos por acción.** Los componentes y guards preguntan por permisos, no por roles. Cada feature declara en
-su `<feature>.feature.ts` qué roles reciben sus permisos; `core/auth/permisos.registry.ts` los reúne al iniciar.
-La tabla siguiente es la referencia que esas declaraciones deben respetar.
+**Permisos por acción.** Los componentes, los guards y el menú preguntan por permisos, nunca por roles. Los permisos
+del usuario son los de su rol y llegan en `/api/auth/me`: el frontend no los deduce. Un rol inactivo llega con la
+lista vacía. El catálogo de códigos vive en `core/auth/permisos.ts` y coincide con el del backend
+(`backend/src/shared/auth/permisos.ts`) hasta que se genere desde el contrato (sección 5.10).
 
-Roles de empleados:
+**Configuración de referencia de los roles iniciales.** La tabla resume los perfiles de RNS-ROL-01 y sirve para
+configurar los primeros roles desde la pantalla de usuarios y roles. No forma parte del código: cada rol tiene los
+permisos que le asigna el administrador.
 
-| Permiso | GERENTE | VENDEDOR | OPERARIO_DEPOSITO | ADMINISTRATIVO |
+| Permiso | Gerente | Vendedor | Operario de depósito | Administrativo |
 |---|:-:|:-:|:-:|:-:|
-| `panel:leer` | ✔ | resumido | resumido | ✔ |
+| `panel:leer` | ✔ | ✔ | ✔ | ✔ |
 | `ventas:registrar` (mostrador y redes sociales) | ✔ | ✔ | | |
 | `ventas:leer` | ✔ | ✔ | | ✔ |
 | `ventas:cancelar` | ✔ | | | |
@@ -454,11 +462,16 @@ Roles de empleados:
 | `auditoria:leer` | ✔ | | | |
 | `usuarios:administrar` / `parametros:editar` | ✔ | | | |
 
-Roles de clientes (solo `mi-cuenta` y tienda): `CLIENTE_MINORISTA` consulta sus pedidos y solicita devoluciones;
-`CLIENTE_MAYORISTA` consulta su historial, cuotas pendientes y crédito disponible.
+> Configuración propuesta a partir de RNS-ROL-01 y de los actores de los casos de uso.
 
-> Matriz propuesta a partir de RNS-ROL-01 y de los actores de los casos de uso. El equipo la valida en la fase 0
-> del plan de desarrollo.
+**Panel.** El panel muestra cada sección según el permiso de sus datos: por ejemplo, las cifras de ventas con
+`ventas:leer` y los vencimientos con `proveedores:gestionar`. Un perfil sin acceso a finanzas ve así un panel reducido,
+sin que haga falta un permiso propio para el panel completo.
+
+**Clientes.** Los perfiles de cliente acceden solo a la tienda y a `mi-cuenta`: el minorista consulta sus pedidos y
+solicita devoluciones; el mayorista consulta su historial, sus cuotas pendientes y su crédito disponible.
+**Pendiente:** definir cómo se reconoce una sesión de cliente sin roles fijos (un permiso propio o la asociación del
+usuario con `CLIENTE_MINORISTA` o `CLIENTE_MAYORISTA`). Se resuelve junto con la tienda.
 
 Para ocultar acciones en un template se usa la directiva estructural:
 
@@ -649,7 +662,7 @@ El orden en que se construyen y su responsable están en el plan de desarrollo.
 | `auditoria` | `/auditoria` | Lista de cambios con filtros | — | `auditoria:leer` |
 | `config/*` | `/config/...` | Usuarios, categorías, descuentos, parámetros | CUU9.3 | `usuarios:administrar`, `parametros:editar`, `descuentos:editar` |
 | `tienda` | `/tienda` | Catálogo, ficha, carrito con reserva, checkout (requiere propuesta visual propia) | CUU2.1 | Público |
-| `mi-cuenta` | `/mi-cuenta` | Pedidos, devoluciones y, para mayoristas, cuenta corriente | CUU2.3, CUU7.3, CUU10.1 | Rol de cliente |
+| `mi-cuenta` | `/mi-cuenta` | Pedidos, devoluciones y, para mayoristas, cuenta corriente | CUU2.3, CUU7.3, CUU10.1 | Sesión de cliente (pendiente, sección 5.6) |
 
 Atajos del mostrador: `F2` búsqueda, `F4` cliente, `F8` medio de pago, `F12` cobrar, `Esc` quitar la
 última línea.
@@ -680,9 +693,9 @@ features/inventario/stock/
 
 - [ ] Carpeta en `features/` con la estructura de la sección 5.2.
 - [ ] `<feature>.routes.ts` con `export default` y `permissionGuard` en cada ruta.
-- [ ] `<feature>.feature.ts` con rutas, ítems de menú y permisos por rol.
+- [ ] `<feature>.feature.ts` con rutas e ítems de menú, cada uno con su permiso.
 - [ ] Feature agregada en `app.features.ts` (una línea).
-- [ ] Permisos nuevos reflejados en la tabla de la sección 5.6.
+- [ ] Permisos nuevos agregados al catálogo del backend (`shared/auth/permisos.ts`) y a `core/auth/permisos.ts`.
 - [ ] DTOs basados en los tipos generados del backend.
 - [ ] `.api.ts` sin lógica de pantalla; las `pages` no llaman a `HttpClient` directamente.
 - [ ] Estados de carga (esqueleto), vacío y error con «Reintentar» en cada panel.
