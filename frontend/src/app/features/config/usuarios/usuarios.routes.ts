@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
+import { permissionGuard } from '@core/auth/permission.guard';
 
-// Pantalla provisoria hasta implementar la feature: reemplazar loadComponent por './pages/<pagina>'
-// y agregar permissionGuard('usuarios:administrar') cuando exista AuthStore (arquitectura-frontend.md, 5.6).
+// Pantalla provisoria hasta implementar la feature: reemplazar loadComponent por './pages/<pagina>'.
 export default [
   {
     path: '',
+    canActivate: [permissionGuard('usuarios:administrar')],
     title: 'Usuarios y roles',
     data: {
       breadcrumb: 'Usuarios y roles',

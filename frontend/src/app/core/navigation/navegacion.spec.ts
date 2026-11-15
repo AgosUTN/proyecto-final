@@ -23,4 +23,15 @@ describe('construirMenu', () => {
     expect(menu.map((g) => g.grupo)).toEqual([null, 'Ventas', 'Inventario']);
     expect(menu[2].items.map((i) => i.etiqueta)).toEqual(['A', 'B']);
   });
+
+  it('deja solo los ítems cuyo permiso tiene el usuario y omite los grupos vacíos', () => {
+    const menu = construirMenu(
+      [
+        feature([{ ruta: '/s', etiqueta: 'S', grupo: 'Inventario', permiso: 'stock:leer', orden: 10 }]),
+        feature([{ ruta: '/v', etiqueta: 'V', grupo: 'Ventas', permiso: 'ventas:leer', orden: 10 }]),
+      ],
+      (permiso) => permiso === 'stock:leer',
+    );
+    expect(menu).toEqual([{ grupo: 'Inventario', items: [expect.objectContaining({ etiqueta: 'S' })] }]);
+  });
 });

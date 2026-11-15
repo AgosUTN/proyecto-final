@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
+import { permissionGuard } from '@core/auth/permission.guard';
 
-// Pantalla provisoria hasta implementar la feature: reemplazar loadComponent por './pages/<pagina>'
-// y agregar permissionGuard('analisis:leer') cuando exista AuthStore (arquitectura-frontend.md, 5.6).
+// Pantalla provisoria hasta implementar la feature: reemplazar loadComponent por './pages/<pagina>'.
 export default [
   {
     path: '',
+    canActivate: [permissionGuard('analisis:leer')],
     title: 'Pronóstico de demanda',
     data: {
       breadcrumb: 'Pronóstico de demanda',

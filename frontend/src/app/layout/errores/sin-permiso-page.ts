@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Boton, Cabecera, EstadoVacio } from '@shared/ui';
 
-/** Acceso denegado (403). Lo usará permissionGuard cuando exista AuthStore (arquitectura, 5.6). */
+/** Acceso denegado: destino de permissionGuard y de las respuestas 403 (arquitectura, 5.6 y 5.7). */
 @Component({
   selector: 'app-sin-permiso-page',
   imports: [Cabecera, EstadoVacio, Boton, RouterLink],

@@ -91,3 +91,32 @@ ul {
     }
   }
 }
+
+// Bloque del usuario al pie de la navegación
+.sidebar__usuario {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-2);
+  margin-top: auto;
+  padding: var(--esp-4) var(--esp-3) 0;
+  border-top: 1px solid var(--borde);
+}
+
+.sidebar__usuario-datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar__usuario-nombre {
+  font: var(--t-cuerpo-medio);
+  color: var(--carbon-900);
+  overflow-wrap: anywhere;
+}
+
+.sidebar__usuario-rol {
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}

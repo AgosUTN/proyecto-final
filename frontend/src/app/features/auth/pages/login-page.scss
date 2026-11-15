@@ -1,0 +1,35 @@
+:host {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--esp-8) var(--margen-pagina);
+  background: var(--lienzo);
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-6);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login__marca {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+
+  .filete {
+    margin-bottom: var(--esp-3);
+  }
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+
+  button[type='submit'] {
+    width: 100%;
+  }
+}

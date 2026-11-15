@@ -17,7 +17,7 @@
 </div>
 
 <nav aria-label="Secciones">
-  @for (grupo of menu; track grupo.grupo) {
+  @for (grupo of menu(); track grupo.grupo) {
     @if (grupo.grupo) {
       <h2 class="sidebar__grupo">{{ grupo.grupo }}</h2>
     }
@@ -56,3 +56,21 @@
     </ul>
   }
 </nav>
+
+@if (usuario(); as u) {
+  <div class="sidebar__usuario">
+    <div class="sidebar__usuario-datos">
+      <span class="sidebar__usuario-nombre">{{ u.nombre }}</span>
+      <span class="sidebar__usuario-rol">{{ u.rol }}</span>
+    </div>
+    <button
+      appBoton="terciario"
+      tamanio="sm"
+      type="button"
+      [cargando]="cerrando()"
+      (click)="cerrarSesion()"
+    >
+      Cerrar sesión
+    </button>
+  </div>
+}

@@ -1,4 +1,5 @@
 import { Route, Routes } from '@angular/router';
+import { authGuard, invitadoGuard } from '@core/auth/auth.guard';
 import { FeatureDef } from '@core/navigation/feature.types';
 import { ConfigBreadcrumb } from '@core/navigation/breadcrumbs';
 import { Shell } from '@layout/shell';
@@ -20,11 +21,17 @@ const porEspecificidad = (a: FeatureDef, b: FeatureDef) =>
 
 const internas = FEATURES_APP.filter((f) => !f.publica).sort(porEspecificidad);
 
-// Pendientes según arquitectura-frontend.md: shell público de la tienda (5.4) y authGuard (5.6).
+// Pendiente según arquitectura-frontend.md: shell público de la tienda (5.4).
 export const routes: Routes = [
+  {
+    path: 'login',
+    canActivate: [invitadoGuard],
+    loadChildren: () => import('@features/auth/auth.routes'),
+  },
   {
     path: '',
     component: Shell,
+    canActivate: [authGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'panel' },
       ...internas.map(rutaDeFeature),

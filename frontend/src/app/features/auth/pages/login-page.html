@@ -1,0 +1,35 @@
+<main class="login">
+  <div class="login__marca">
+    <div class="filete" aria-hidden="true"></div>
+    <h1 class="t-titulo">{{ nombreApp }}</h1>
+    <p class="t-sec">Bazar, gestión comercial</p>
+  </div>
+
+  <app-panel
+    titulo="Iniciar sesión"
+    variante="seccion"
+    descripcion="Acceso para el personal de la empresa."
+  >
+    <form class="login__form" [formGroup]="form" (ngSubmit)="ingresar()" novalidate>
+      @if (error(); as mensaje) {
+        <app-alerta tono="error" rol="alert">{{ mensaje }}</app-alerta>
+      }
+
+      <app-campo etiqueta="Nombre de usuario" obligatorio [error]="errorDe('nombreUsuario')">
+        <input
+          appInput
+          formControlName="nombreUsuario"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+      </app-campo>
+
+      <app-campo etiqueta="Contraseña" obligatorio [error]="errorDe('contrasena')">
+        <input appInput type="password" formControlName="contrasena" autocomplete="current-password" />
+      </app-campo>
+
+      <button appBoton="primario" type="submit" [cargando]="enviando()">Iniciar sesión</button>
+    </form>
+  </app-panel>
+</main>
