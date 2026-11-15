@@ -1,37 +1,23 @@
 import 'reflect-metadata';
-import express from 'express';
-import cors from 'cors';
-import { MikroORM, RequestContext } from '@mikro-orm/mysql';
-import config from './mikro-orm.config';
+import { MikroORM } from '@mikro-orm/mysql';
+import { crearApp } from './app';
+import { env } from './config/env';
+import { ENTIDADES } from './modules';
+import { configuracionOrm } from './shared/db/mikro-orm.config';
+import { logger } from './shared/logger';
 
 async function main() {
-  const orm = await MikroORM.init(config);
+  const orm = await MikroORM.init(configuracionOrm(ENTIDADES));
 
-  // Crea/actualiza las tablas según las entidades, sin borrar tablas ni columnas.
-  // Para producción real conviene pasar a migraciones.
+  // Crea o actualiza las tablas según las entidades, sin borrar tablas ni columnas (convenciones, sección 7.5).
   await orm.schema.update({ safe: true });
 
-  const app = express();
-  app.use(cors({ origin: process.env.CORS_ORIGIN }));
-  app.use(express.json());
-  // Un EntityManager (identity map) por request
-  app.use((_req, _res, next) => RequestContext.create(orm.em, next));
-
-  // Valida que la API está arriba y que llega a MySQL.
-  app.get('/health', async (_req, res) => {
-    try {
-      await orm.em.getConnection().execute('select 1');
-      res.json({ status: 'ok', db: 'up' });
-    } catch {
-      res.status(503).json({ status: 'error', db: 'down' });
-    }
+  crearApp(orm).listen(env.PORT, () => {
+    logger.info(`API de negocio escuchando en el puerto ${env.PORT}`);
   });
-
-  const port = Number(process.env.PORT ?? 3000);
-  app.listen(port, () => console.log(`API de negocio escuchando en :${port}`));
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((error: unknown) => {
+  logger.fatal({ err: error }, 'No se pudo iniciar la API de negocio');
   process.exit(1);
 });
