@@ -238,6 +238,7 @@ frontend/src/
    │  ├─ ui/                   boton · campo · autocompletar · tabla · paginador · estructura
    │  │                        (cabecera, panel, cifras) · estados (sello, alerta, estado-vacio,
    │  │                        skeleton) · selectores · dialogo · toast · icono · pagina-pendiente
+   │  │                        menu-acciones · barra-acciones
    │  ├─ data-access/          api.types.ts (Respuesta, Paginado, Baja) · crud-api.ts · page-query.ts
    │  └─ forms/                validators/ · server-errors.ts
    │

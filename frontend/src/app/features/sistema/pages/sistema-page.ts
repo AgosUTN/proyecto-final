@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import {
+  AccionMenu,
   Alerta,
   Autocompletar,
+  BarraAcciones,
   Boton,
   Cabecera,
   Campo,
@@ -13,6 +15,7 @@ import {
   EstadoVacio,
   Icono,
   InputCampo,
+  MenuAcciones,
   OpcionAutocompletar,
   OrdenTabla,
   Paginador,
@@ -55,6 +58,7 @@ interface FilaEjemplo {
     ReactiveFormsModule,
     Alerta,
     Autocompletar,
+    BarraAcciones,
     Boton,
     Cabecera,
     Campo,
@@ -62,6 +66,7 @@ interface FilaEjemplo {
     EstadoVacio,
     Icono,
     InputCampo,
+    MenuAcciones,
     Paginador,
     Panel,
     Pestanas,
@@ -107,6 +112,11 @@ export default class SistemaPage {
     { valor: 'anio', etiqueta: 'Año' },
   ];
   protected readonly periodo = signal('semana');
+
+  protected readonly accionesMenu: AccionMenu[] = [
+    { etiqueta: 'Editar', alHacer: () => this.toasts.info('Acción «Editar» seleccionada.') },
+    { etiqueta: 'Eliminar', peligro: true, alHacer: () => this.confirmar() },
+  ];
 
   private readonly todasOpciones: OpcionAutocompletar<number>[] = [
     { valor: 1, etiqueta: 'Primera opción', detalle: 'Detalle' },

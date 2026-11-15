@@ -11,4 +11,6 @@ export * from './tabla/paginador';
 export * from './autocompletar/autocompletar';
 export * from './dialogo/dialogo';
 export * from './toast/toast';
+export * from './menu-acciones/menu-acciones';
+export * from './barra-acciones/barra-acciones';
 export { default as PaginaPendiente } from './pagina-pendiente/pagina-pendiente';

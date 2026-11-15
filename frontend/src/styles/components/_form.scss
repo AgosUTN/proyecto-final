@@ -1,0 +1,51 @@
+// --- Barra de acciones del formulario (app-barra-acciones) ----------------------
+// Flota al pie del contenido mientras se recorre el formulario: lleva sombra de elemento flotante.
+@use '../mixins' as m;
+
+.barra-acciones {
+  position: sticky;
+  bottom: var(--esp-4);
+  z-index: var(--z-barra);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3) var(--esp-4);
+  margin-top: var(--esp-6);
+  padding: var(--esp-3) var(--esp-4);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-md);
+  box-shadow: var(--sombra-pop);
+}
+
+.barra-acciones__aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-width: 0;
+  font: var(--t-peq);
+  color: var(--error);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.barra-acciones__botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  margin-left: auto;
+}
+
+@include m.hasta(sm) {
+  .barra-acciones__botones {
+    flex-direction: column-reverse;
+    width: 100%;
+
+    > * {
+      width: 100%;
+    }
+  }
+}

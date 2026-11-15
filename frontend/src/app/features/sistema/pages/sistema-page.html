@@ -121,6 +121,24 @@
     </div>
   </app-panel>
 
+  <app-panel
+    titulo="Acciones de fila y de formulario"
+    variante="seccion"
+    descripcion="Menú de acciones por fila y barra fija al pie del formulario."
+  >
+    <div class="columna">
+      <div class="fila">
+        <span class="t-sec">Menú de acciones por fila</span>
+        <app-menu-acciones etiqueta="Acciones del registro de ejemplo" [acciones]="accionesMenu" />
+      </div>
+      <app-barra-acciones aviso="1 campo requiere corrección en Datos generales.">
+        <button appBoton="terciario" type="button">Cancelar</button>
+        <button appBoton="secundario" type="button">Acción secundaria</button>
+        <button appBoton="primario" type="button">Guardar cambios</button>
+      </app-barra-acciones>
+    </div>
+  </app-panel>
+
   <app-tabla
     etiqueta="Tabla de ejemplo"
     [columnas]="columnas"

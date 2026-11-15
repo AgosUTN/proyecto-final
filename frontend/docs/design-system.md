@@ -95,6 +95,8 @@ el layout usan estilos encapsulados con su layout particular, siempre con tokens
 | `app-cifras`                                                   | Indicadores tipográficos en una fila, no tarjetas                                                                             |
 | `app-sello`                                                    | Estado con una de las cinco familias                                                                                          |
 | `app-alerta`                                                   | Contexto en línea                                                                                                             |
+| `app-menu-acciones`                                            | Botón «…» de cada fila con el menú del CDK; acciones por input, las destructivas con `peligro`. Va en `appAccionesFila`       |
+| `app-barra-acciones`                                           | Barra fija al pie del formulario: aviso de campos a corregir y botones (Cancelar, secundaria, principal)                      |
 | `ToastService`                                                 | Confirma una acción repitiendo su verbo ("Crear producto" → "Producto creado.")                                               |
 | `DialogoService`                                               | `confirmar()` para acciones difíciles de deshacer; `abrirDrawer()` con `app-drawer`                                           |
 | `app-estado-vacio`                                             | Invitación a actuar, no lamento                                                                                               |
@@ -107,14 +109,14 @@ el layout usan estilos encapsulados con su layout particular, siempre con tokens
 | Patrón | Mockup | Composición |
 | --- | --- | --- |
 | Tablero | `01-panel.png` | `app-cabecera` + `app-cifras` + paneles en grilla + `app-tabla` |
-| Listado | `02-productos-listado.png` | `app-cabecera` + `app-pestanas` + `app-tabla` (herramientas, masiva, `app-paginador`) |
-| Formulario | `03-producto-nuevo.png` | `app-cabecera` + índice de secciones + `app-panel variante="seccion"` + barra de acciones fija |
+| Listado | `02-productos-listado.png` | `app-cabecera` + `app-pestanas` + `app-tabla` (herramientas, masiva, `app-paginador`, `app-menu-acciones` por fila) |
+| Formulario | `03-producto-nuevo.png` | `app-cabecera` + índice de secciones + `app-panel variante="seccion"` + `app-barra-acciones` |
 | Detalle | `04-venta-detalle.png` | `app-cabecera` con `app-sello` + columna principal + columna lateral de paneles de datos |
 | Teléfono | `05-productos-movil.png` | La tabla se apila como lista; acciones a 44 px |
 
-El índice de secciones, la barra de acciones fija del formulario y la columna lateral del detalle
-todavía no son componentes: se incorporan a `shared/ui` con la primera feature que los use, y desde
-entonces todas las demás los reutilizan.
+El índice de secciones y la columna lateral del detalle todavía no son componentes: se incorporan a
+`shared/ui` con la primera feature que los use, y desde entonces todas las demás los reutilizan. La barra
+de acciones del formulario ya es `app-barra-acciones`.
 
 ## Formatos
 
