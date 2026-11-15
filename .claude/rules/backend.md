@@ -13,14 +13,16 @@ Documento obligatorio. Se carga con este archivo y, ante cualquier duda, manda s
 - Cada recurso es un módulo en `backend/src/modules/<modulo>/` con sus ocho archivos: entity, routes, schemas,
   dto, mapper, service, controller y errors (convenciones, sección 2).
 - Rutas siempre con `requirePermission(...)` y `validar({ params, body, query })`. Lo validado se lee de
-  `res.locals.validado`; nunca se reasigna `req.query`.
+  `res.locals.validado`; nunca se reasigna `req.query`. Única excepción: el módulo `auth`, cuyo login y logout son
+  públicos y cuyo `/auth/me` solo exige sesión; `validar` se aplica donde la ruta recibe datos.
 - Controladores sin `try/catch` ni acceso al ORM. Servicios sin `req` ni `res`. Las respuestas pasan siempre por
   el mapper; ningún controlador devuelve una entidad.
 - Errores de negocio con `throw new ApiError(ERRORES.X)` desde el servicio, declarados en `<modulo>.errors.ts`.
   El formato de error lo arma solo el manejador central.
 - Reglas de negocio citadas por su código (RNS-…) en el servicio y en el nombre de su test.
 - Un módulo usa a otro a través de su servicio; nunca escribe sobre entidades ajenas.
-- Esquema de base de datos solo con migraciones. Montos en centavos dentro del servicio.
+- Esquema de base de datos sincronizado al arrancar con `orm.schema.update({ safe: true })`; por ahora no se usan
+  migraciones (convenciones, sección 7.5). Montos en centavos dentro del servicio.
 - No modificar `frontend/`. No agregar dependencias sin acordarlo.
 - Mensajes de error y commits según `CLAUDE.md` de la raíz.
 
