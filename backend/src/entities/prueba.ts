@@ -1,7 +1,5 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/decorators/legacy";
+import { Entity } from "@mikro-orm/decorators/legacy";
+import { BaseEntity } from "../shared/db/base.entity";
 
 @Entity()
-export class Prueba {
-  @PrimaryKey()
-  id!: number;
-}
+export class Prueba extends BaseEntity {}
