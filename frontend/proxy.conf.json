@@ -1,0 +1,11 @@
+{
+  "/api": {
+    "target": "http://backend:3000",
+    "secure": false
+  },
+  "/ds-api": {
+    "target": "http://ds-api:8000",
+    "secure": false,
+    "pathRewrite": { "^/ds-api": "" }
+  }
+}
