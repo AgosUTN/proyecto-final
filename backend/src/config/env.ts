@@ -8,6 +8,11 @@ function duracionEnSegundos(valor: string): number {
   return Number(valor.slice(0, -1)) * SEGUNDOS_POR_UNIDAD[unidad];
 }
 
+/** Variable opcional: una cadena vacía (la que pasa compose si no está definida) cuenta como ausente. */
+function opcional<T extends z.ZodType>(esquema: T) {
+  return z.preprocess((valor) => (valor === '' ? undefined : valor), esquema.optional());
+}
+
 const esquemaEnv = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']),
   PORT: z.coerce.number().int().positive().default(3000),
@@ -23,6 +28,10 @@ const esquemaEnv = z.object({
     .regex(/^[1-9]\d*[smhd]$/)
     .transform(duracionEnSegundos),
   CORS_ORIGIN: z.url(),
+  /** Administrador inicial: se crea al arrancar si la base no tiene usuarios (convenciones, sección 7.5). */
+  ADMIN_USUARIO: opcional(z.string().trim().min(1).max(50)),
+  ADMIN_EMAIL: opcional(z.email().max(254)),
+  ADMIN_CONTRASENA: opcional(z.string().min(8).max(72)),
 });
 
 export type Env = z.infer<typeof esquemaEnv>;
