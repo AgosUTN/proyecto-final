@@ -1,4 +1,5 @@
 import type { ZodObject, ZodType } from 'zod';
+import type { Permiso } from '../auth/permisos';
 import type { DefinicionError } from '../http/api-error';
 
 export type MetodoHttp = 'get' | 'post' | 'put' | 'patch' | 'delete';
@@ -11,7 +12,7 @@ export interface DocRuta {
   resumen: string;
   descripcion?: string;
   /** Permiso que exige la ruta. Sin permiso, la ruta solo exige sesión, salvo que sea `publica`. */
-  permiso?: string;
+  permiso?: Permiso;
   publica?: boolean;
   params?: ZodObject;
   query?: ZodObject;

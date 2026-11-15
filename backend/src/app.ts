@@ -7,6 +7,7 @@ import { pinoHttp } from 'pino-http';
 import { RequestContext, type MikroORM } from '@mikro-orm/mysql';
 import { env } from './config/env';
 import { MODULOS } from './modules';
+import { autenticar } from './shared/auth/autenticar';
 import { errorHandler, rutaInexistente } from './shared/http/error-handler';
 import { salud, saludOpenApi } from './shared/http/salud';
 import { logger } from './shared/logger';
@@ -53,8 +54,9 @@ export function crearApp(orm: MikroORM): Express {
 
   app.get('/health', salud(orm));
   publicarDocumentacion(app, crearDocumento(gruposDocumentados()));
+  // La autenticación se aplica una sola vez a cada módulo no público; los permisos, en cada ruta.
   for (const modulo of MODULOS) {
-    app.use(`/api${modulo.ruta}`, modulo.router);
+    app.use(`/api${modulo.ruta}`, ...(modulo.publico ? [] : [autenticar]), modulo.router);
   }
 
   app.use(rutaInexistente);
