@@ -39,3 +39,8 @@ export const permisoSchema = z.enum(PERMISOS);
 export function permisosVigentes(permisos: readonly string[]): Permiso[] {
   return PERMISOS.filter((permiso) => permisos.includes(permiso));
 }
+
+/** Permisos que otorga un rol: los vigentes de su lista, o ninguno si el rol está inactivo. */
+export function permisosDeRol(rol: { activo: boolean; permisos: readonly string[] }): Permiso[] {
+  return rol.activo ? permisosVigentes(rol.permisos) : [];
+}

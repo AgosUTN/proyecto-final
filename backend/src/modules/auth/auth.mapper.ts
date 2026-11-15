@@ -1,4 +1,4 @@
-import { permisosVigentes } from '../../shared/auth/permisos';
+import { permisosDeRol } from '../../shared/auth/permisos';
 import type { Usuario } from '../usuarios/usuario.entity';
 import type { UsuarioSesionDto } from './auth.dto';
 
@@ -7,6 +7,6 @@ export const AuthMapper = {
     id: usuario.id,
     nombre: usuario.nombreUsuario,
     rol: usuario.rol.nombre,
-    permisos: permisosVigentes(usuario.rol.permisos),
+    permisos: permisosDeRol(usuario.rol),
   }),
 };
