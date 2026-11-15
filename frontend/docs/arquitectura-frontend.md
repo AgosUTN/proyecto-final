@@ -8,9 +8,9 @@ implementarla.
 
 | Dato | Valor |
 |---|---|
-| Versión | 1.2 — 14/11/2026 (registro distribuido de features) |
+| Versión | 1.3 — 14/11/2026 (sistema de diseño «Parte comercial» implementado; reemplaza a la guía visual anterior; Mercado Libre, ARCA y Andreani dentro del alcance) |
 | Framework | Angular 22 (standalone, zoneless, signals) |
-| Guía visual obligatoria | `GUIA_DISENO_CHAMPAGNE_FLORENTINA.md` (paleta 06 · Petróleo & Rosa Viejo, tipografía F · Catálogo) |
+| Guía visual obligatoria | [`design-system.md`](./design-system.md) y mockups de [`docs/mockups/`](./mockups/README.md) |
 | Referencia analizada | [AgosUTN/App-web](https://github.com/AgosUTN/App-web) (`Front_V2`, Angular 21) |
 | Fuentes funcionales | Entrega 1, Entrega 2 y Etapa 3 del proyecto final |
 
@@ -73,11 +73,17 @@ están en [`docs/plan-de-desarrollo.md`](../../docs/plan-de-desarrollo.md).
 | Devoluciones | CUU10.1 a 10.4 |
 | Dashboard, pronóstico de demanda (`ds-api`), auditoría, reportes | CUU11.1, CUU11.2 |
 | Cobro y reintegro con Mercado Pago | CUU1.2, CUU2.1, CUU10.3 |
+| Publicación y ventas en Mercado Libre | — |
+| Facturación electrónica con ARCA | — |
+| Envíos con Andreani | CUU2.2 |
 
-Fuera de alcance: Mercado Libre, ARCA, OCR, Andreani, Tiendanube, servicio de correo y chatbot. Sus funciones se
-resuelven dentro del sistema: comprobantes sin CAE, documentos cargados a mano, seguimiento de envíos manual y
-avisos visibles en la aplicación en lugar de correos. Las pantallas que muestran comprobantes quedan preparadas
-para mostrar el estado de autorización si más adelante se integra ARCA.
+Integraciones externas dentro del alcance: Mercado Pago (sección 5.13), Mercado Libre, ARCA y Andreani. Mientras
+una integración no esté implementada, su función se resuelve dentro del sistema (comprobantes sin CAE, seguimiento
+de envíos manual) y las pantallas quedan preparadas para mostrar sus datos: CAE y estado de autorización en los
+comprobantes, canal Mercado Libre en las ventas, operador y seguimiento en los pedidos.
+
+Fuera de alcance: OCR, Tiendanube, servicio de correo y chatbot. Sus funciones se resuelven dentro del sistema:
+documentos cargados a mano y avisos visibles en la aplicación en lugar de correos.
 
 ### 1.4 Roles
 
@@ -99,13 +105,13 @@ Fuente de verdad: **RNS-ROL-01 de la Etapa 3**.
 | RNS-STK-01/02 | Un producto tiene al menos una variante y exactamente una principal; la primera creada es la principal |
 | RNS-STK-03 | La variante principal no se activa sin al menos una foto: el formulario lo indica y bloquea la activación |
 | RNS-STK-07/08 | Atributos de variante: solo Tamaño, Color y Material, todos opcionales |
-| RNS-STK-11 a 14 | El SKU de la variante lo genera el sistema; se muestra como dato de solo lectura en Red Hat Mono |
+| RNS-STK-11 a 14 | El SKU de la variante lo genera el sistema; se muestra como dato de solo lectura |
 | RNS-STK-15/16/18 | Precio y costo se definen por producto, con fecha de vigencia e historial consultable |
 | RNS-MOV-02 | El stock nunca es negativo: el ajuste manual valida antes de enviar y muestra el rechazo del backend |
 | RNS-MOV-03 | El ajuste manual exige motivo |
-| RNS-VENTA-05 | Estados de venta con colores de la guía 1.8; transiciones solo las permitidas |
+| RNS-VENTA-05 | Estados de venta con `<app-sello>` y su familia de color (design-system.md, «Color»); transiciones solo las permitidas |
 | RNS-VENTA-07/10/11 | Los totales y precios de una venta registrada son de solo lectura |
-| RNS-MPG-01 | Medios de pago: efectivo, débito y crédito (ver inconsistencia 10.2) |
+| RNS-MPG-01 | Medios de pago: efectivo, débito y crédito |
 
 ---
 
@@ -154,7 +160,7 @@ Componente ──► XService extends BaseCrudService<Create, Read, Update, Tabl
 | DTOs por caso de uso | Cada pantalla recibe solo lo que usa |
 | Manejo de errores HTTP en un interceptor | Un único punto para el tratamiento transversal |
 | JWT en cookie httpOnly (`withCredentials`) | El token no es accesible desde JavaScript |
-| Filas esqueleto durante la carga | Coincide con la guía 7.15 |
+| Filas esqueleto durante la carga | `app-tabla` en estado `cargando` |
 
 ---
 
@@ -171,14 +177,14 @@ Cada mejora cita el archivo de App-web que la motiva.
 | 5 | Roles repetidos en las rutas, en `MenuService` y en `isAdmin()`; íconos como strings de SVG | `menu-service.ts`, `app.routes.ts` | Cada feature declara sus rutas, ítems de menú y permisos en un solo archivo (`<feature>.feature.ts`); `core` los reúne. Sin listas repetidas ni archivos centrales que todos editen |
 | 6 | `shared` importa diálogos de las features | `dialog-service.ts` | Reglas de dependencia explícitas y verificadas con ESLint (sección 5.3) |
 | 7 | Cada componente repite su `switch (status)` para traducir errores | `libros-create.ts`, `step2-component.ts` | Catálogo único `code → mensaje` y helper `applyServerErrors(form, error)` |
-| 8 | Errores 0, 400 y 500 redirigen a `/error/:code` | `error.interceptor.ts` | Aviso dentro del panel afectado con acción «Reintentar» (guía 7.15); página de error solo para rutas inexistentes o sin permiso |
-| 9 | El HTML de cada listado está duplicado para escritorio y celular; breakpoint repetido en dos lugares | `libros-read.html`, `viewport-service.ts`, `main-layout-component.ts` | `<app-data-table>` que resuelve ambas vistas; breakpoints con `BreakpointObserver` del CDK expuestos como signal |
-| 10 | SVG copiado en cada botón y esqueleto escrito celda por celda | `libros-read.html`, `iconPaths.ts` | Componentes de `shared/ui` y `lucide-angular` |
+| 8 | Errores 0, 400 y 500 redirigen a `/error/:code` | `error.interceptor.ts` | Aviso dentro del panel afectado con acción «Reintentar»; página de error solo para rutas inexistentes o sin permiso |
+| 9 | El HTML de cada listado está duplicado para escritorio y celular; breakpoint repetido en dos lugares | `libros-read.html`, `viewport-service.ts`, `main-layout-component.ts` | `<app-tabla>` que resuelve ambas vistas (en teléfono apila las filas); breakpoints únicos en `styles/_mixins.scss` y, si hace falta en TypeScript, `BreakpointObserver` del CDK |
+| 10 | SVG copiado en cada botón y esqueleto escrito celda por celda | `libros-read.html`, `iconPaths.ts` | Componentes de `shared/ui` y `<app-icono>` con un registro propio de íconos, sin dependencias |
 | 11 | `any` en interceptors, `!` en formularios, interfaces de respuesta duplicadas, constantes copiadas de la API | `cache.interceptor.ts`, `apiResponseGet.model.ts`, `crudNames.config.ts` | `ApiResponse<T>` y `Paginado<T>` únicos, formularios tipados y tipos generados desde el OpenAPI del backend |
 | 12 | Paginación con cinco parámetros sueltos; el estado no queda en la URL | `baseCrudService.ts` | Objeto `PageQuery` sincronizado con los query params |
 | 13 | Caché global acoplada al router; se borra completa | `cache-service.ts`, `crud-tracking-service.ts` | Sin caché al inicio; cuando haga falta, caché por recurso invalidada por etiqueta |
 | 14 | IP fija en el entorno (`192.168.100.8`) y carpeta `enviroments` mal escrita | `enviroment.ts` | URLs relativas `/api` y `/ds-api`, con `proxy.conf.json` en desarrollo y nginx en producción |
-| 15 | Tema de Angular Material con Inter y colores escritos en los componentes | `styles.scss`, `_variables.scss` | Tokens de la guía, Archivo y Red Hat Mono, CDK sin tema visual |
+| 15 | Tema de Angular Material con Inter y colores escritos en los componentes | `styles.scss`, `_variables.scss` | Tokens de `design-system.md`, Newsreader e IBM Plex Sans alojadas en el proyecto, CDK sin tema visual |
 | 16 | Archivos de test generados sin contenido | `*.spec.ts` | Estrategia mínima definida (sección 9) |
 
 ---
@@ -194,19 +200,17 @@ Cada mejora cita el archivo de App-web que la motiva.
 5. **Feature-first:** cada módulo de negocio es autocontenido y se carga bajo demanda.
 6. **Composición sobre herencia:** no hay clases base de componentes.
 7. **Contrato tipado** con el backend.
-8. **La guía de diseño es obligatoria:** ningún color, fuente o espaciado fuera de sus tokens.
+8. **El sistema de diseño es obligatorio:** ningún color, fuente o espaciado fuera de los tokens de `design-system.md`.
 
 ### 5.2 Estructura de carpetas
 
 ```
 frontend/src/
-├─ styles/
-│  ├─ tokens/
-│  │  ├─ colors.css            ← bloque [data-paleta="petroleo"] de prototipo-paletas/assets/paletas.css
-│  │  └─ typography.css        ← bloque [data-tipo="catalogo"] de prototipo-paletas/assets/tipografias.css
-│  ├─ base.css                 ← reset, body, foco, números tabulares
-│  └─ layout.css               ← grillas g-2-1, g-3-2, g-1-1 (guía 5.5)
-├─ styles.scss                 ← importa fuentes (@fontsource) y styles/
+├─ styles/                    ← ver design-system.md, «Arquitectura de estilos»
+│  ├─ _tokens.scss             ← única fuente de colores, tipos, espacios, radios, sombras y movimiento
+│  ├─ _mixins.scss · _fonts.scss · _base.scss · _utilities.scss
+│  └─ components/              ← estilos globales de shared/ui
+├─ styles.scss                 ← solo imports de styles/
 └─ app/
    ├─ app.config.ts
    ├─ app.features.ts          ← lista de features (una línea por feature)
@@ -218,17 +222,16 @@ frontend/src/
    │  ├─ http/                 api-base.interceptor.ts · credentials.interceptor.ts · error.interceptor.ts
    │  │                        api.types.ts · api-error.ts · error-catalog.ts
    │  ├─ navigation/           feature.types.ts · navegacion.ts · breadcrumbs.ts
-   │  ├─ formatters/           ars.pipe.ts · porcentaje.pipe.ts · fecha.pipe.ts (es-AR, guía 16.2)
-   │  ├─ estados/              estados.ts (estado backend → texto y variante, guía 1.8)
-   │  └─ ui-state/             breakpoints.ts · notificaciones.service.ts
+   │  ├─ formatters/           ars.pipe.ts · porcentaje.pipe.ts · fecha.pipe.ts (es-AR)
+   │  └─ estados/              estados.ts (estado backend → texto y tono de <app-sello>)
    │
-   ├─ layout/                  shell interno · sidebar · topbar · breadcrumbs · page-header
-   │                           shell público de la tienda
+   ├─ layout/                  shell interno (con barra superior) · sidebar · breadcrumbs · errores/
+   │                           shell público de la tienda (pendiente)
    │
    ├─ shared/
-   │  ├─ ui/                   button · estado · tag · panel · kpi-ledger · field · aviso
-   │  │                        data-table · skeleton · empty-state · dialog · confirm-dialog
-   │  │                        segmented · chip-filter · stepper · detail-panel · meter · icon
+   │  ├─ ui/                   boton · campo · autocompletar · tabla · paginador · estructura
+   │  │                        (cabecera, panel, cifras) · estados (sello, alerta, estado-vacio,
+   │  │                        skeleton) · selectores · dialogo · toast · icono · pagina-pendiente
    │  ├─ data-access/          crud-api.ts · page-query.ts
    │  └─ forms/                validators/ · server-errors.ts
    │
@@ -263,8 +266,9 @@ frontend/src/
       └─ mi-cuenta/            portal del cliente: pedidos, devoluciones, cuenta corriente (mayoristas)
 ```
 
-Las rutas siguen el mapa de la guía 6.1. El módulo de personal de la guía no forma parte del modelo de dominio y
-no se construye.
+Las rutas son las de la sección 6. La cabecera de página (`app-cabecera`) vive en `shared/ui` y no en `layout/`,
+porque las features la usan y no pueden importar `layout` (sección 5.3). Las notificaciones son `ToastService`,
+en `shared/ui`.
 
 Estructura interna de cada feature:
 
@@ -323,11 +327,12 @@ export interface FeatureDef {
 export interface NavItem {
   ruta: string;
   etiqueta: string;
-  icono: LucideIconName;
-  grupo: 'Ventas' | 'Inventario' | 'Compras' | 'Análisis' | 'Configuración';
+  grupo?: 'Ventas' | 'Inventario' | 'Compras' | 'Análisis' | 'Configuración'; // sin grupo: ítem suelto (Panel)
   permiso: Permiso;
   orden: number;
 }
+// Sin ícono: el menú lateral es solo texto (design-system.md).
+// La lista de features llega a layout/ por el token FEATURES, provisto en app.config.ts.
 ```
 
 ```ts
@@ -336,7 +341,7 @@ export const stockFeature: FeatureDef = {
   ruta: 'inventario/stock',
   rutas: () => import('./stock.routes').then((m) => m.default),
   nav: [
-    { ruta: '/inventario/stock', etiqueta: 'Stock y variantes', icono: 'package', grupo: 'Inventario', permiso: 'stock:leer', orden: 10 },
+    { ruta: '/inventario/stock', etiqueta: 'Stock y variantes', grupo: 'Inventario', permiso: 'stock:leer', orden: 20 },
   ],
   permisos: {
     'stock:leer': ['GERENTE', 'VENDEDOR', 'OPERARIO_DEPOSITO', 'ADMINISTRATIVO'],
@@ -347,7 +352,7 @@ export const stockFeature: FeatureDef = {
 
 ```ts
 // app.features.ts — único archivo compartido: una línea por feature
-export const FEATURES: FeatureDef[] = [
+export const FEATURES_APP: FeatureDef[] = [
   authFeature,
   panelFeature,
   mostradorFeature,
@@ -358,14 +363,16 @@ export const FEATURES: FeatureDef[] = [
 ```
 
 ```ts
-// app.routes.ts — se arma a partir de FEATURES
+// app.routes.ts — se arma a partir de FEATURES_APP
 export const routes: Routes = [
-  ...FEATURES.filter((f) => f.publica).map((f) => ({ path: f.ruta, component: ShellPublico, loadChildren: f.rutas })),
+  ...FEATURES_APP.filter((f) => f.publica).map((f) => ({ path: f.ruta, component: ShellPublico, loadChildren: f.rutas })),
   {
     path: '',
     component: Shell,
     canActivate: [authGuard],
-    children: FEATURES.filter((f) => !f.publica).map((f) => ({ path: f.ruta, loadChildren: f.rutas })),
+    // Ordenadas de la más específica a la más general ('ventas/mostrador' antes que 'ventas').
+    // Cada ruta lleva como miga el grupo de su NavItem, no navegable.
+    children: internas.sort(porEspecificidad).map(rutaDeFeature),
   },
   { path: 'sin-permiso', loadComponent: () => import('@layout/errores/sin-permiso-page') },
   { path: '**', loadComponent: () => import('@layout/errores/no-encontrado-page') },
@@ -389,7 +396,12 @@ export default [
 ### 5.5 Navegación
 
 `core/navigation/navegacion.ts` reúne los `nav` de todas las features, los ordena por grupo y `orden`, y los filtra
-según los permisos del usuario. De ahí salen el menú lateral y las migas. No existe una lista central de ítems.
+según los permisos del usuario (el filtro se activa cuando exista `AuthStore`). De ahí sale el menú lateral. No
+existe una lista central de ítems.
+
+Las migas (`core/navigation/breadcrumbs.ts`) se arman desde el árbol de rutas activo: el grupo de la feature como
+primera miga no navegable y luego `data.breadcrumb` de cada ruta (texto o función de la ruta, para etiquetas como
+«Venta V-00412»). La última miga es la página actual. Detalle visual en `design-system.md`.
 
 ### 5.6 Seguridad: autenticación y permisos
 
@@ -451,7 +463,7 @@ Roles de clientes (solo `mi-cuenta` y tienda): `CLIENTE_MINORISTA` consulta sus 
 Para ocultar acciones en un template se usa la directiva estructural:
 
 ```html
-<app-button *can="'stock:ajustar'" (click)="abrirAjuste()">Registrar ajuste</app-button>
+<button *can="'stock:ajustar'" appBoton="primario" type="button" (click)="abrirAjuste()">Registrar ajuste</button>
 ```
 
 Ocultar un botón no reemplaza la validación: el backend controla cada permiso.
@@ -484,7 +496,7 @@ export interface ApiError {
 | Error de validación de un campo (`campos`) | Debajo del campo, con `applyServerErrors(form, error)` |
 | Error de negocio de una acción (stock insuficiente, precio duplicado) | Aviso de error en el panel de la acción |
 | Falla al cargar los datos de un panel (red, 500) | Aviso dentro del panel con «Reintentar»; el resto de la pantalla sigue operativa |
-| Acción completada | Notificación efímera abajo a la derecha (guía 7.8), 4 segundos |
+| Acción completada | Notificación efímera abajo a la derecha (`ToastService`): 5 segundos, 8 si es un error |
 | Sesión vencida (401) | Redirección al login conservando la ruta |
 | Sin permiso (403) o ruta inexistente | Página `/sin-permiso` o «Página no encontrada» |
 
@@ -554,35 +566,27 @@ export class ProductosApi {
 
 ### 5.11 Interfaz
 
-**Librería de componentes.** No se usa el tema visual de Angular Material (guía 16.4). Se usa **Angular CDK** para
-el comportamiento accesible (diálogos, overlay, foco, stepper, breakpoints) y **componentes propios** en
-`shared/ui` según la guía, sección 7.
+La identidad visual se define en [`design-system.md`](./design-system.md) (sistema «Parte comercial») y los
+mockups de referencia en [`docs/mockups/`](./mockups/README.md). Este apartado solo fija cómo se implementa.
 
-**Del prototipo a Angular:**
+**Librería de componentes.** No se usa el tema visual de Angular Material. Se usa **Angular CDK** para el
+comportamiento accesible (diálogos, overlay, foco, breakpoints) y **componentes propios** en `shared/ui`. La guía
+viva de esos componentes está en la ruta `/sistema`, disponible solo en desarrollo.
 
-| Prototipo (`prototipo-paletas/`) | Destino en Angular |
-|---|---|
-| `assets/paletas.css`, bloque `[data-paleta="petroleo"]` | `styles/tokens/colors.css` |
-| `assets/tipografias.css`, bloque `[data-tipo="catalogo"]` | `styles/tokens/typography.css` |
-| `assets/base.css` | Estilos de cada componente de `shared/ui` y de `layout/` |
-| `assets/app.js`: `ars()`, `nf()` | Pipes `ars` y `numero` en `core/formatters` |
-| `assets/app.js`: `barraLateral()`, íconos `IC` | `layout/sidebar` + `lucide-angular` |
-| `assets/app.js`: `barrasApiladas()`, `spark()`, `pronostico()` | Componentes de gráficos (futuros: panel y predicción) |
-| `erp-mostrador.html`, `erp-stock.html` | Pantallas de referencia de las features del alcance actual |
-| `assets/tokens.json` | Fuente de colores para los reportes que genere FastAPI |
+**Reglas obligatorias:** sin colores hexadecimales ni medidas fuera de los tokens, sin sombras en superficies que no
+flotan, sin degradados, radios de hasta 6 px, montos con el pipe `ars`, números de tabla alineados a la derecha con
+`tabular-nums`, estados siempre con `<app-sello>`. Si una feature necesita un componente que no existe, se agrega a
+`shared/ui` y a `/sistema`; nunca se crea una variante local.
 
-**Reglas obligatorias:** sin colores hexadecimales en componentes, sin sombras difusas ni degradados, radios de
-hasta 6 px, montos con el pipe `ars`, números de tabla alineados a la derecha con `tabular-nums`, estados siempre
-con `<app-estado>`.
+**Fuentes:** Newsreader e IBM Plex Sans, alojadas en `public/fonts` (licencia SIL OFL) y declaradas en
+`styles/_fonts.scss`. No se cargan desde servicios externos.
 
-**Fuentes:** `@fontsource-variable/archivo` y `@fontsource/red-hat-mono` (pesos 400 y 500), importadas en
-`styles.scss` (guía 2.3).
-
-**Responsive:** breakpoints de la guía, sección 14 (1500, 1100 y 760 px). El mostrador se diseña para escritorio y
+**Responsive:** breakpoints de `styles/_mixins.scss` (640, 960, 1280 y 1600 px). Debajo de 960 px el menú lateral
+pasa a un drawer y debajo de 640 px las tablas se apilan como lista. El mostrador se diseña para escritorio y
 tablet apaisada; en celular solo se consulta stock.
 
-**Accesibilidad:** guía, sección 15 (foco visible, `aria-label` en botones de ícono, `role="img"` en gráficos,
-estados con texto además de color).
+**Accesibilidad:** foco visible en todos los controles, `aria-label` en botones de ícono, etiqueta visible en cada
+campo, `role="img"` con descripción en gráficos y estados con texto además de color.
 
 ### 5.12 Entornos y despliegue
 
@@ -626,27 +630,28 @@ El orden en que se construyen y su responsable están en el plan de desarrollo.
 | Feature | Ruta | Pantallas principales | Casos de uso | Permiso de acceso |
 |---|---|---|---|---|
 | `auth` | `/login`, `/tienda/ingresar` | Inicio de sesión de empleados y de clientes | — | Público |
-| `panel` | `/panel` | Panel del día (guía 10.1) | CUU11.1 | `panel:leer` |
-| `ventas/mostrador` | `/ventas/mostrador` | POS (guía 10.2) | CUU1.1 a 1.3 | `ventas:registrar` |
+| `panel` | `/panel` | Panel del día (mockup 01) | CUU11.1 | `panel:leer` |
+| `ventas/mostrador` | `/ventas/mostrador` | POS | CUU1.1 a 1.3 | `ventas:registrar` |
 | `ventas/redes-sociales` | `/ventas/redes-sociales` | Registro manual con opción de envío | CUU12.1 | `ventas:registrar` |
 | `ventas/historial` | `/ventas` | Listado, detalle con comprobante y cuotas, cancelación | — | `ventas:leer` |
-| `ventas/pedidos` | `/ventas/pedidos` | Cola de preparación, bultos, despacho y entrega (guía 10.5) | CUU2.2 | `pedidos:gestionar` |
+| `ventas/pedidos` | `/ventas/pedidos` | Cola de preparación, bultos, despacho y entrega | CUU2.2 | `pedidos:gestionar` |
 | `ventas/mayoristas` | `/ventas/mayoristas` | Clientes, ficha con cuenta corriente, venta mayorista, cobro de cuotas | CUU7.1 a 7.5 | `mayoristas:administrar` |
 | `ventas/devoluciones` | `/ventas/devoluciones` | Solicitudes, evaluación, verificación y nota de crédito | CUU10.1 a 10.4 | `devoluciones:*` |
+| `ventas/facturacion` | `/ventas/facturacion` | Comprobantes electrónicos emitidos con ARCA y su estado de autorización | — | `ventas:leer` |
 | `inventario/productos` | `/inventario/productos` | Listado, `form-page`, variantes con fotos, historial de precios | CUU9.1, 9.2, 9.4 | `productos:leer` |
-| `inventario/stock` | `/inventario/stock` | Tabla con variantes y panel de detalle (guía 10.3), ajuste manual | CUU1.1, CUU9.5 | `stock:leer` |
+| `inventario/stock` | `/inventario/stock` | Tabla con variantes y panel de detalle, ajuste manual | CUU1.1, CUU9.5 | `stock:leer` |
 | `inventario/sin-rotacion` | `/inventario/sin-rotacion` | Detección por período y promoción de liquidación | CUU8.1, 8.2 | `analisis:leer` |
-| `inventario/recepciones` | `/inventario/recepciones` | Recepción con remito adjunto y control contra la orden (guía 10.4, sin OCR) | CUU4.1 a 4.4 | `recepciones:registrar` |
+| `inventario/recepciones` | `/inventario/recepciones` | Recepción con remito adjunto y control contra la orden (sin OCR) | CUU4.1 a 4.4 | `recepciones:registrar` |
 | `compras/ordenes` | `/compras/ordenes` | Sugerencias, borrador, emisión en PDF, seguimiento | CUU5.1, 5.2 | `compras:gestionar` |
 | `compras/proveedores` | `/compras/proveedores` | Proveedores, compromisos, pagos, cuenta corriente, vencimientos | CUU5.3, CUU6.1 a 6.3 | `proveedores:gestionar` |
-| `analisis/prediccion` | `/analisis/prediccion` | Pronóstico con nivel de confianza (guía 11) | CUU11.2 | `analisis:leer` |
+| `analisis/prediccion` | `/analisis/prediccion` | Pronóstico con nivel de confianza | CUU11.2 | `analisis:leer` |
 | `analisis/reportes` | `/analisis/reportes` | Reportes de los requerimientos de análisis de la Etapa 3 | — | `analisis:leer` |
-| `auditoria` | `/auditoria` | Lista de cambios con filtros (guía 10.5) | — | `auditoria:leer` |
+| `auditoria` | `/auditoria` | Lista de cambios con filtros | — | `auditoria:leer` |
 | `config/*` | `/config/...` | Usuarios, categorías, descuentos, parámetros | CUU9.3 | `usuarios:administrar`, `parametros:editar`, `descuentos:editar` |
-| `tienda` | `/tienda` | Catálogo, ficha, carrito con reserva, checkout (guía 12) | CUU2.1 | Público |
+| `tienda` | `/tienda` | Catálogo, ficha, carrito con reserva, checkout (requiere propuesta visual propia) | CUU2.1 | Público |
 | `mi-cuenta` | `/mi-cuenta` | Pedidos, devoluciones y, para mayoristas, cuenta corriente | CUU2.3, CUU7.3, CUU10.1 | Rol de cliente |
 
-Atajos del mostrador (guía 10.2): `F2` búsqueda, `F4` cliente, `F8` medio de pago, `F12` cobrar, `Esc` quitar la
+Atajos del mostrador: `F2` búsqueda, `F4` cliente, `F8` medio de pago, `F12` cobrar, `Esc` quitar la
 última línea.
 
 ---
@@ -683,7 +688,7 @@ features/inventario/stock/
 - [ ] Estados de carga (esqueleto), vacío y error con «Reintentar» en cada panel.
 - [ ] Códigos de error nuevos agregados al catálogo con su texto.
 - [ ] Textos revisados con las reglas de `CLAUDE.md`.
-- [ ] Checklist de aceptación de la guía, sección 17.
+- [ ] Pantalla revisada contra `design-system.md`, su mockup de referencia y `/sistema`.
 - [ ] Tests de la sección 9.
 
 ---
@@ -695,11 +700,11 @@ features/inventario/stock/
 | Idioma | Dominio en español (`producto`, `variante`, `venta`); términos técnicos en inglés (`store`, `api`, `page`, `guard`) |
 | Archivos | kebab-case con sufijo: `stock-page.ts`, `stock.api.ts`, `stock.store.ts`, `stock-fila.dto.ts`, `auth.guard.ts`, `ars.pipe.ts` |
 | Clases | PascalCase sin sufijo `Component`: `StockPage`, `StockDetalle`, `AjusteDialog` |
-| Selectores | Prefijo `app-`: `<app-estado>`, `<app-data-table>` |
+| Selectores | Prefijo `app-`: `<app-sello>`, `<app-tabla>`; directivas sobre elementos nativos: `[appBoton]`, `[appInput]` |
 | Componentes | Standalone, `OnPush`, `input()`, `output()`, `inject()`; template en archivo aparte cuando supera unas 30 líneas |
 | Estado | `signal` privado con versión pública de solo lectura (`asReadonly()`) |
 | Suscripciones | Se evitan; si son necesarias, `takeUntilDestroyed()` |
-| Estilos | Solo tokens `var(--…)`; sin hexadecimales; estilos de componente encapsulados |
+| Estilos | Solo tokens `var(--…)`; sin hexadecimales; estilos de componente encapsulados, salvo `shared/ui`, cuyos estilos son globales (`design-system.md`, «Arquitectura de estilos») |
 | Textos de interfaz | Reglas de `CLAUDE.md`: formales, impersonales, botones en infinitivo |
 | Formato de código | Prettier (configuración del repo) + ESLint (`angular-eslint` y `eslint-plugin-boundaries`) |
 | Commits | Conventional Commits en una línea, según `CLAUDE.md` |
@@ -711,7 +716,7 @@ features/inventario/stock/
 | Qué | Herramienta | Alcance |
 |---|---|---|
 | Stores, pipes, guards, mapeo de errores, `PageQuery` | Vitest | Obligatorio para todo lo nuevo en `core` y `shared/data-access` |
-| Componentes de `shared/ui` críticos (`data-table`, `estado`, `field`) | Vitest + Angular Testing Library | Comportamiento visible, no detalles internos |
+| Componentes de `shared/ui` críticos (`tabla`, `sello`, `campo`) | Vitest + Angular Testing Library | Comportamiento visible, no detalles internos |
 | Flujos completos | Playwright | Inicio de sesión, alta de producto con variante, venta en mostrador |
 
 Los archivos `.spec.ts` vacíos no se commitean.
@@ -720,17 +725,15 @@ Los archivos `.spec.ts` vacíos no se commitean.
 
 ## 10. Inconsistencias detectadas en la documentación
 
-Diferencias encontradas entre la Etapa 3, la guía de diseño y el repositorio. El equipo debe resolverlas antes de
+Diferencias encontradas entre la Etapa 3 y el repositorio. El equipo debe resolverlas antes de
 implementar las features afectadas.
 
 | # | Inconsistencia | Fuentes | Afecta a |
 |---|---|---|---|
-| 10.1 | La guía 6.3 usa actores (empleado de mostrador, logística de recepción, logística de despacho, encargado de compras, analista, administrador) distintos de los 6 roles de RNS-ROL-01 | Guía 6.3 · Etapa 3 | Permisos y menú |
-| 10.2 | La guía 10.2 lista 6 medios de pago (incluye transferencia, QR Mercado Pago y cuenta corriente); RNS-MPG-01 define 3 (efectivo, débito, crédito) | Guía 10.2 · Etapa 3 | Mostrador |
 | 10.3 | RN13 (una promoción no puede superponerse con otra) contradice RNS-DESC-07 (se aplica la de mayor beneficio) | CURS9 · Etapa 3 | Promociones (futuro) y mostrador |
 | 10.4 | CUU9.1 pide «SKU» y «marca» al producto; las reglas definen `codigo_interno` en el producto, SKU por variante, y no existe la entidad Marca | CUU9.1 · RNS-STK-10/11 | Productos |
 | 10.5 | El flujo de CUU9.5 (ajuste de stock) está copiado de CUU9.3 y describe una promoción | CUU9.5 | Stock |
-| 10.6 | CUU1.1 devuelve «ubicación en depósito» y la guía usa «punto de pedido»; ninguno de los dos figura en las reglas ni en el modelo de stock | CUU1.1 · Guía 1.8 y 10.2 | Stock y mostrador |
+| 10.6 | CUU1.1 devuelve «ubicación en depósito», que no figura en las reglas ni en el modelo de stock | CUU1.1 | Stock y mostrador |
 | 10.7 | «Pendiente de facturación» (CURS01, camino 3.a) no es un estado de venta en RNS-VENTA-05 | CURS01 · RNS-VENTA-05 | Mostrador e historial |
 | 10.8 | El riesgo R08 menciona PostgreSQL; `docker-compose.yml` usa MySQL 8.4 | Etapa 3 · Repositorio | Backend |
 
@@ -759,5 +762,5 @@ implementar las features afectadas.
 | Entrega 1 | Objetivos, procesos 01 a 05 |
 | Entrega 2 | Factibilidad técnica, arquitectura cloud, decisión Tiendanube |
 | Etapa 3 | Actores, reglas de negocio, casos de uso 1 y 9, alcance del prototipo (137 PF), riesgos R02 y R08 |
-| `GUIA_DISENO_CHAMPAGNE_FLORENTINA.md` | Partes 1 y 2; secciones 1.8, 5, 6, 7, 8, 10, 14, 15, 16 y 17 |
-| `prototipo-paletas/` | `paletas.css`, `tipografias.css`, `base.css`, `app.js`, pantallas del ERP |
+| `design-system.md` | Identidad visual, tokens, componentes y patrones de pantalla |
+| `docs/mockups/` | Pantallas de referencia por tipo (tablero, listado, formulario, detalle, teléfono) |

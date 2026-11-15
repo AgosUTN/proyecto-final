@@ -1,0 +1,28 @@
+<label class="campo__etiqueta" [attr.for]="idControl">
+  {{ etiqueta() }}
+  @if (obligatorio()) {
+    <span class="campo__req" aria-hidden="true">*</span>
+  }
+</label>
+<div
+  class="campo__control"
+  [class.campo__control--prefijo]="prefijo()"
+  [class.campo__control--sufijo]="sufijo()"
+>
+  @if (prefijo()) {
+    <span class="campo__prefijo" aria-hidden="true">{{ prefijo() }}</span>
+  }
+  <ng-content />
+  @if (sufijo()) {
+    <span class="campo__sufijo" aria-hidden="true">{{ sufijo() }}</span>
+  }
+</div>
+@if (error()) {
+  <span class="campo__error" [id]="idError">
+    <app-icono nombre="alerta" [tamanio]="14" />
+    <span>{{ error() }}</span>
+  </span>
+}
+@if (ayuda()) {
+  <span class="campo__ayuda" [id]="idAyuda">{{ ayuda() }}</span>
+}

@@ -1,0 +1,303 @@
+@use '../mixins' as m;
+
+@mixin sr-only-local {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// Tabla única del ERP (app-tabla). Productos, clientes, proveedores y compras
+// comparten exactamente este diseño; solo cambian las columnas.
+
+.tabla-caja {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--t-cuerpo);
+
+  th {
+    height: 40px;
+    padding: 0 var(--esp-4);
+    text-align: left;
+    vertical-align: middle;
+    font: var(--t-etiqueta);
+    color: var(--carbon-600);
+    background: var(--arena);
+    border-bottom: 1px solid var(--borde-fuerte);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: var(--esp-3) var(--esp-4);
+    border-bottom: 1px solid var(--borde);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color var(--t-rapida) var(--ease);
+
+    &:hover {
+      background: var(--botella-50);
+    }
+
+    &.tabla__fila--sel {
+      background: var(--botella-100);
+    }
+
+    &:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  .tabla__fin {
+    text-align: right;
+  }
+
+  td.tabla__fin {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .tabla__check {
+    width: 44px;
+    padding-right: 0;
+
+    .check input {
+      margin: 0;
+    }
+  }
+
+  .tabla__acciones {
+    width: 56px;
+    padding-left: 0;
+    text-align: right;
+  }
+}
+
+.tabla--compacta {
+  th {
+    height: 36px;
+  }
+
+  td {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+}
+
+.tabla__orden {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--carbon-900);
+  }
+
+  .tabla__orden-icono {
+    opacity: 0.5;
+  }
+}
+
+th[aria-sort='ascending'] .tabla__orden,
+th[aria-sort='descending'] .tabla__orden {
+  color: var(--carbon-900);
+
+  .tabla__orden-icono {
+    opacity: 1;
+  }
+}
+
+.celda-principal {
+  display: block;
+  font-weight: 500;
+  color: var(--carbon-900);
+}
+
+.celda-secundaria {
+  display: block;
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+// Barra de herramientas (búsqueda y filtros) sobre la tabla.
+.tabla-herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  align-items: center;
+  padding: 14px var(--esp-4);
+  border-bottom: 1px solid var(--borde);
+}
+
+// Acciones sobre la selección.
+.tabla-masiva {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-4);
+  align-items: center;
+  padding: var(--esp-2) var(--esp-4);
+  background: var(--botella-100);
+  border-bottom: 1px solid var(--botella-300);
+}
+
+.tabla-masiva__cuenta {
+  font-weight: 600;
+}
+
+// Pie con paginación.
+.paginador {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-3);
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px var(--esp-4);
+  border-top: 1px solid var(--borde);
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.paginador__controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-4);
+  align-items: center;
+}
+
+.paginador__tamanio {
+  display: flex;
+  gap: var(--esp-2);
+  align-items: center;
+
+  .input {
+    width: 76px;
+  }
+}
+
+.paginas {
+  display: flex;
+  gap: var(--esp-1);
+  align-items: center;
+}
+
+.pagina {
+  min-width: var(--alto-control-sm);
+  height: var(--alto-control-sm);
+  padding: 0 var(--esp-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: none;
+  font: var(--t-etiqueta);
+  font-variant-numeric: tabular-nums;
+  color: var(--carbon-700);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--lienzo);
+  }
+
+  &[aria-current='page'] {
+    border-color: var(--borde-control);
+    background: var(--superficie);
+    color: var(--carbon-900);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.paginas__salto {
+  padding: 0 var(--esp-1);
+}
+
+// --- Pantallas angostas: la tabla se convierte en lista, no se achica. -----------------
+@include m.hasta(sm) {
+  .tabla--apilable {
+    thead {
+      @include sr-only-local;
+    }
+
+    tbody,
+    tr,
+    td {
+      display: block;
+    }
+
+    tbody tr {
+      position: relative;
+      padding: var(--esp-3) var(--esp-4);
+      border-bottom: 1px solid var(--borde);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--esp-4);
+      padding: 2px 0;
+      border: 0;
+      text-align: right;
+
+      &::before {
+        content: attr(data-etiqueta);
+        font: var(--t-peq);
+        color: var(--carbon-600);
+        text-align: left;
+      }
+    }
+
+    td.tabla__principal {
+      display: block;
+      padding-right: 72px;
+      margin-bottom: var(--esp-1);
+      text-align: left;
+
+      &::before {
+        content: none;
+      }
+    }
+
+    td.tabla__check {
+      position: absolute;
+      left: var(--esp-4);
+      top: var(--esp-3);
+      width: auto;
+
+      &::before {
+        content: none;
+      }
+
+      ~ td.tabla__principal {
+        padding-left: 28px;
+      }
+    }
+
+    td.tabla__acciones {
+      position: absolute;
+      right: var(--esp-2);
+      top: var(--esp-2);
+      width: auto;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+}

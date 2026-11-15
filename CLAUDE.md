@@ -20,6 +20,11 @@ profesionalismo**. Vale para pantallas, ayudas, diálogos, errores, avisos, corr
 - **«Recibo de sueldo»**, nunca «de haberes». Sin dos puntos explicativos ni «(s)» en los plurales.
 - Antes de entregar un texto nuevo, releerlo preguntando si lo firmaría una empresa ante un cliente.
 
+## Frontend
+
+Las reglas del frontend están en `.claude/rules/frontend.md` y se cargan al trabajar en `frontend/`. Incluyen
+la arquitectura (`frontend/docs/arquitectura-frontend.md`) y el sistema de diseño (`frontend/docs/design-system.md`).
+
 ## Commits
 
 Los mensajes de commit siguen [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).

@@ -1,0 +1,78 @@
+@use 'mixins' as m;
+
+// --- Estilos de texto ---------------------------------------------------------
+.t-display {
+  font: var(--t-display);
+  font-variation-settings: 'opsz' 60;
+  letter-spacing: -0.015em;
+}
+
+.t-titulo {
+  font: var(--t-titulo);
+  font-variation-settings: 'opsz' 48;
+  letter-spacing: -0.012em;
+
+  @include m.hasta(md) {
+    font: var(--t-titulo-movil);
+  }
+}
+
+.t-seccion {
+  font: var(--t-seccion);
+  font-variation-settings: 'opsz' 28;
+}
+
+.t-bajada {
+  font: var(--t-bajada);
+  font-variation-settings: 'opsz' 16;
+  color: var(--carbon-700);
+  max-width: 66ch;
+}
+
+.t-cifra {
+  font: var(--t-cifra);
+  font-variation-settings: 'opsz' 36;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.t-panel {
+  font: var(--t-panel);
+}
+
+.t-etiqueta {
+  font: var(--t-etiqueta);
+}
+
+.t-peq {
+  font: var(--t-peq);
+}
+
+.t-sec {
+  color: var(--carbon-600);
+}
+
+// Cifras alineadas en columnas.
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+// Oculto visualmente, disponible para lectores de pantalla.
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Filete champagne: marca editorial sobre el título de cada página.
+.filete {
+  width: 40px;
+  height: 3px;
+  background: var(--champagne-600);
+}

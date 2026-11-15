@@ -1,0 +1,197 @@
+@use '@angular/cdk';
+
+// Estructura base de overlays del CDK (posicionamiento, backdrop, foco).
+@include cdk.overlay();
+
+// --- Fondo ---------------------------------------------------------------------
+.cdk-overlay-backdrop.fondo-overlay {
+  background: var(--fondo-overlay);
+}
+
+// --- Modal ---------------------------------------------------------------------
+// Solo para confirmar algo que no se puede deshacer fácilmente.
+.modal {
+  display: block;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 64px);
+  overflow: auto;
+  background: var(--superficie);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--r-md);
+  box-shadow: var(--sombra-overlay);
+  animation: modal-entra var(--t-lenta) var(--ease);
+}
+
+.modal__cab {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  padding: var(--esp-6) var(--esp-6) 0;
+}
+
+.modal__titulo {
+  font: var(--t-seccion);
+  font-variation-settings: 'opsz' 28;
+}
+
+.modal__cuerpo {
+  padding: var(--esp-3) var(--esp-6) 0;
+  color: var(--carbon-700);
+}
+
+.modal__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  padding: var(--esp-6);
+}
+
+@keyframes modal-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+}
+
+// --- Drawer lateral ------------------------------------------------------------
+.cdk-overlay-pane.drawer-panel {
+  position: fixed !important;
+  top: 0;
+  bottom: 0;
+  height: 100dvh;
+}
+
+.cdk-overlay-pane.drawer-panel--der {
+  right: 0;
+}
+
+.cdk-overlay-pane.drawer-panel--izq {
+  left: 0;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--superficie);
+  box-shadow: var(--sombra-overlay);
+}
+
+.drawer-panel--der .drawer {
+  width: min(480px, 100vw);
+  border-left: 1px solid var(--borde-fuerte);
+  animation: drawer-der var(--t-lenta) var(--ease);
+}
+
+.drawer-panel--izq .drawer {
+  animation: drawer-izq var(--t-lenta) var(--ease);
+}
+
+.drawer__cab {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-5) var(--esp-6);
+  border-bottom: 1px solid var(--borde);
+}
+
+.drawer__cuerpo {
+  flex: 1;
+  overflow: auto;
+  padding: var(--esp-6);
+}
+
+.drawer__pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+  padding: var(--esp-4) var(--esp-6);
+  border-top: 1px solid var(--borde);
+}
+
+@keyframes drawer-der {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+@keyframes drawer-izq {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+}
+
+// --- Listas flotantes: autocompletar y menús ------------------------------------
+.lista-flotante {
+  min-width: 200px;
+  max-height: 320px;
+  overflow: auto;
+  margin: 0;
+  padding: var(--esp-1);
+  list-style: none;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-md);
+  box-shadow: var(--sombra-pop);
+  animation: lista-entra var(--t-media) var(--ease);
+}
+
+.lista-flotante__opcion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-3);
+  width: 100%;
+  min-height: 36px;
+  padding: var(--esp-2) 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  font: var(--t-cuerpo);
+  color: var(--carbon-900);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &.lista-flotante__opcion--activa,
+  &:focus-visible {
+    background: var(--botella-50);
+    outline: none;
+  }
+
+  &[aria-selected='true'] {
+    font-weight: 500;
+  }
+
+  &--peligro {
+    color: var(--error);
+  }
+}
+
+.lista-flotante__detalle {
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.lista-flotante__vacio {
+  padding: var(--esp-3);
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.lista-flotante__separador {
+  height: 1px;
+  margin: var(--esp-1) 0;
+  background: var(--borde);
+}
+
+@keyframes lista-entra {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}

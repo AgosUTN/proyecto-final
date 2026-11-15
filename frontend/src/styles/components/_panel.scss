@@ -1,0 +1,151 @@
+@use '../mixins' as m;
+
+// --- Panel: superficie base de todo contenido. Sin sombra: se separa con borde. ---
+.panel {
+  display: block;
+  min-width: 0;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-md);
+}
+
+.panel__cab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-3);
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px var(--esp-5);
+  border-bottom: 1px solid var(--borde);
+}
+
+.panel__titulo {
+  font: var(--t-panel);
+  color: var(--carbon-900);
+}
+
+.panel__meta {
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.panel__cuerpo {
+  padding: var(--esp-5);
+}
+
+// Panel de formulario: título de sección en serif + descripción.
+.panel__cab--seccion {
+  display: block;
+  padding: var(--esp-5) var(--esp-6) 0;
+  border-bottom: 0;
+
+  .panel__descripcion {
+    margin-top: var(--esp-1);
+    font: var(--t-peq);
+    color: var(--carbon-600);
+  }
+
+  + .panel__cuerpo {
+    padding: var(--esp-5) var(--esp-6) var(--esp-6);
+  }
+}
+
+// --- Cabecera de página: filete + título + bajada + acciones ----------------------
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-4) var(--esp-6);
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 36px 0 28px;
+
+  @include m.hasta(md) {
+    padding: var(--esp-6) 0 var(--esp-5);
+  }
+}
+
+.cabecera__texto {
+  flex: 1 1 520px;
+  min-width: 0;
+
+  .filete {
+    margin-bottom: 18px;
+  }
+}
+
+.cabecera__linea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3) var(--esp-4);
+}
+
+.cabecera__bajada {
+  margin-top: 10px;
+}
+
+.cabecera__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+  align-items: center;
+}
+
+// --- Fila de cifras: indicadores tipográficos dentro de un solo panel ---------------
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.cifras__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--esp-5) var(--esp-6);
+
+  & + & {
+    border-left: 1px solid var(--borde);
+  }
+
+  @include m.hasta(sm) {
+    & + & {
+      border-left: 0;
+      border-top: 1px solid var(--borde);
+    }
+  }
+}
+
+.cifras__etiqueta,
+.cifras__nota {
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.cifras__nota--exito {
+  color: var(--exito);
+}
+
+.cifras__nota--adv {
+  color: var(--adv);
+}
+
+.cifras__nota--error {
+  color: var(--error);
+}
+
+// --- Listas de datos (dl) en paneles de detalle -----------------------------------
+.datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  padding: var(--esp-4) var(--esp-5);
+
+  dt {
+    font: var(--t-peq);
+    color: var(--carbon-600);
+  }
+
+  dd {
+    margin: 2px 0 0;
+  }
+}

@@ -1,0 +1,74 @@
+<div class="campo__control campo__control--prefijo" cdkOverlayOrigin #origen="cdkOverlayOrigin">
+  <span class="campo__prefijo"><app-icono nombre="buscar" /></span>
+  <input
+    appInput
+    type="text"
+    role="combobox"
+    autocomplete="off"
+    [placeholder]="placeholder()"
+    [value]="texto()"
+    [disabled]="deshabilitado()"
+    [attr.aria-expanded]="abierto()"
+    [attr.aria-controls]="idLista"
+    aria-autocomplete="list"
+    [attr.aria-activedescendant]="abierto() && activa() >= 0 ? idOpcion(activa()) : null"
+    (input)="escribir($event)"
+    (keydown)="teclado($event)"
+    (focus)="abrir()"
+    (blur)="alSalir()"
+  />
+</div>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="origen"
+  [cdkConnectedOverlayOpen]="abierto()"
+  [cdkConnectedOverlayPositions]="posiciones"
+  [cdkConnectedOverlayMatchWidth]="true"
+  (overlayOutsideClick)="cerrar()"
+  (detach)="cerrar()"
+>
+  <ul class="lista-flotante" role="listbox" [id]="idLista" style="width: 100%">
+    @if (cargando()) {
+      <li class="lista-flotante__vacio" role="presentation">Buscando…</li>
+    } @else {
+      @for (op of opciones(); track $index; let i = $index) {
+        <li
+          role="option"
+          class="lista-flotante__opcion"
+          [id]="idOpcion(i)"
+          [class.lista-flotante__opcion--activa]="i === activa()"
+          [attr.aria-selected]="op.valor === valor()"
+          (mousedown)="$event.preventDefault()"
+          (click)="elegir(op)"
+        >
+          <span>{{ op.etiqueta }}</span>
+          @if (op.detalle) {
+            <span class="lista-flotante__detalle num">{{ op.detalle }}</span>
+          }
+        </li>
+      } @empty {
+        @if (!permitirCrear()) {
+          <li class="lista-flotante__vacio" role="presentation">
+            Sin coincidencias para «{{ texto() }}»
+          </li>
+        }
+      }
+      @if (mostrarCrear()) {
+        <li
+          role="option"
+          class="lista-flotante__opcion"
+          style="justify-content: flex-start; color: var(--botella-700)"
+          [id]="idOpcion(opciones().length)"
+          [class.lista-flotante__opcion--activa]="activa() === opciones().length"
+          aria-selected="false"
+          (mousedown)="$event.preventDefault()"
+          (click)="crearDesdeTexto()"
+        >
+          <app-icono nombre="mas" />
+          <span>Crear «{{ texto() }}»</span>
+        </li>
+      }
+    }
+  </ul>
+</ng-template>

@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+// Punto de entrada de estilos globales. Solo imports, en este orden.
+// Los componentes compartidos viven acá (y no en cada componente) por el
+// presupuesto de 4 kB de estilos por componente definido en angular.json.
+@use 'styles/tokens';
+@use 'styles/fonts';
+@use 'styles/base';
+@use 'styles/utilities';
+@use 'styles/components/button';
+@use 'styles/components/field';
+@use 'styles/components/controls';
+@use 'styles/components/feedback';
+@use 'styles/components/panel';
+@use 'styles/components/table';
+@use 'styles/components/overlay';

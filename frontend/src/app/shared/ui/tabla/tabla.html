@@ -1,0 +1,134 @@
+<ng-content select="[tabla-herramientas]" />
+
+@if (seleccionable() && seleccion().length > 0) {
+  <div class="tabla-masiva" role="region" aria-label="Acciones sobre la selección">
+    <span class="tabla-masiva__cuenta" aria-live="polite">
+      {{ seleccion().length }} {{ seleccion().length === 1 ? 'seleccionado' : 'seleccionados' }}
+    </span>
+    <ng-content select="[tabla-masiva]" />
+    <button
+      class="btn btn--terciario btn--sm"
+      type="button"
+      style="margin-left: auto"
+      (click)="seleccion.set([])"
+    >
+      Quitar selección
+    </button>
+  </div>
+}
+
+<div class="tabla-caja">
+  <table
+    class="tabla tabla--apilable"
+    [class.tabla--compacta]="densidad() === 'compacta'"
+    [attr.aria-busy]="cargando() || null"
+  >
+    <caption class="sr-only">
+      {{
+        etiqueta()
+      }}
+    </caption>
+    <thead>
+      <tr>
+        @if (seleccionable()) {
+          <th scope="col" class="tabla__check">
+            <label class="check">
+              <input
+                type="checkbox"
+                [checked]="todasSeleccionadas()"
+                [indeterminate]="algunasSeleccionadas()"
+                [disabled]="filas().length === 0"
+                (change)="alternarTodas()"
+                aria-label="Seleccionar todas las filas de esta página"
+              />
+            </label>
+          </th>
+        }
+        @for (col of columnas(); track col.clave) {
+          <th
+            scope="col"
+            [class.tabla__fin]="col.alinear === 'fin'"
+            [style.width]="col.ancho ?? null"
+            [attr.aria-sort]="ariaOrden(col.clave)"
+          >
+            @if (col.ordenable) {
+              <button class="tabla__orden" type="button" (click)="ordenar(col.clave)">
+                {{ col.encabezado }}
+                <app-icono
+                  class="tabla__orden-icono"
+                  [nombre]="iconoOrden(col.clave)"
+                  [tamanio]="14"
+                />
+              </button>
+            } @else {
+              {{ col.encabezado }}
+            }
+          </th>
+        }
+        @if (accionesFila()) {
+          <th scope="col" class="tabla__acciones"><span class="sr-only">Acciones</span></th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @if (cargando()) {
+        @for (i of filasSkeleton; track i) {
+          <tr aria-hidden="true">
+            <td [attr.colspan]="totalColumnas()">
+              <span class="skeleton" [style.width]="50 + ((i * 17) % 40) + '%'"></span>
+            </td>
+          </tr>
+        }
+      } @else {
+        @for (fila of filas(); track claveFila()(fila)) {
+          <tr [class.tabla__fila--sel]="estaSeleccionada(fila)">
+            @if (seleccionable()) {
+              <td class="tabla__check">
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    [checked]="estaSeleccionada(fila)"
+                    (change)="alternar(fila)"
+                    [attr.aria-label]="'Seleccionar ' + descripcionFila()(fila)"
+                  />
+                </label>
+              </td>
+            }
+            @for (col of columnas(); track col.clave) {
+              <td
+                [class.tabla__fin]="col.alinear === 'fin'"
+                [class.tabla__principal]="col.principal"
+                [attr.data-etiqueta]="col.encabezado"
+              >
+                @if (templateDe(col.clave); as tpl) {
+                  <ng-container *ngTemplateOutlet="tpl; context: { $implicit: fila, fila: fila }" />
+                } @else {
+                  <span [class.celda-principal]="col.principal">{{
+                    col.valor ? col.valor(fila) : ''
+                  }}</span>
+                }
+              </td>
+            }
+            @if (accionesFila(); as acciones) {
+              <td class="tabla__acciones">
+                <ng-container
+                  *ngTemplateOutlet="acciones.template; context: { $implicit: fila, fila: fila }"
+                />
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="totalColumnas()" style="padding: 0">
+              <ng-content select="[tabla-vacia]">
+                <app-estado-vacio titulo="Sin registros para mostrar" />
+              </ng-content>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>
+
+<ng-content select="[tabla-pie]" />

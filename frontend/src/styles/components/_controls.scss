@@ -1,0 +1,132 @@
+// Pestañas, control segmentado, botón de filtro y chip de filtro aplicado.
+
+// --- Pestañas (filtran una vista; la activa lleva subrayado botella) --------------
+.pestanas {
+  display: flex;
+  gap: var(--esp-6);
+  border-bottom: 1px solid var(--borde);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  height: 40px;
+  margin-bottom: -1px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font: var(--t-cuerpo-medio);
+  color: var(--carbon-600);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--t-rapida) var(--ease),
+    border-color var(--t-rapida) var(--ease);
+
+  &:hover {
+    color: var(--carbon-900);
+  }
+
+  &[aria-selected='true'] {
+    color: var(--carbon-900);
+    border-bottom-color: var(--botella-700);
+
+    .contador {
+      background: var(--botella-100);
+      color: var(--botella-800);
+    }
+  }
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+// --- Control segmentado (períodos, densidad) -------------------------------------
+.segmentado {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--arena);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-sm);
+}
+
+.segmentado__opcion {
+  height: 28px;
+  padding: 0 var(--esp-3);
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  font: var(--t-etiqueta);
+  color: var(--carbon-600);
+  cursor: pointer;
+  transition:
+    background-color var(--t-rapida) var(--ease),
+    color var(--t-rapida) var(--ease);
+
+  &:hover {
+    color: var(--carbon-900);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--superficie);
+    color: var(--carbon-900);
+    box-shadow: var(--sombra-segmento);
+  }
+}
+
+// --- Botón de filtro: "Categoría  Todas ▾" ------------------------------------------
+.filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--alto-control);
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--r-sm);
+  background: var(--superficie);
+  font: var(--t-cuerpo);
+  color: var(--carbon-900);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--lienzo);
+  }
+}
+
+.filtro__nombre {
+  color: var(--carbon-600);
+}
+
+// --- Chip de filtro aplicado ------------------------------------------------------------
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--botella-100);
+  border-radius: var(--r-sm);
+  background: var(--botella-50);
+  font: var(--t-peq);
+  color: var(--carbon-900);
+}
+
+.chip__quitar {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: none;
+  color: var(--carbon-600);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--botella-100);
+    color: var(--carbon-900);
+  }
+}

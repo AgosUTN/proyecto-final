@@ -1,0 +1,136 @@
+// =============================================================================
+// Design tokens — "Parte comercial"
+// Fuente única de verdad de todos los valores visuales del ERP.
+// Ningún componente usa valores hardcodeados: siempre var(--token).
+// Documentación: docs/design-system.md
+// =============================================================================
+
+:root {
+  // --- Marca ------------------------------------------------------------------
+  --botella-900: #132c24; // primario presionado
+  --botella-800: #1a3a30; // primario hover
+  --botella-700: #22493d; // PRIMARIO: acciones, enlaces, foco, sección activa
+  --botella-300: #b9cec5; // series secundarias en gráficos, bordes de selección
+  --botella-100: #dce7e2; // filas seleccionadas, contadores activos
+  --botella-50: #edf3f0; // hover de filas y botones terciarios
+  --vidrio: #e6ece8; // fondo de la navegación lateral
+  --champagne-300: #e8dcbf; // resaltado puntual de datos
+  --champagne-600: #9c7c42; // ACENTO: filete de título, marca de sección activa. Nunca texto.
+  --champagne-700: #7a5f2e; // acento cuando excepcionalmente va como texto (5,9:1)
+
+  // --- Neutros ----------------------------------------------------------------
+  --carbon-900: #1e2422; // texto principal
+  --carbon-700: #3e4642; // bajadas, texto de navegación
+  --carbon-600: #565e5a; // texto secundario (6,0:1 sobre lienzo)
+  --carbon-500: #646b67; // placeholders, solo sobre superficie
+  --lienzo: #f3f4f1; // fondo de la aplicación
+  --superficie: #ffffff; // paneles, tablas, campos, modales
+  --arena: #f2f0ea; // encabezados de tabla, campos de solo lectura
+  --deshabilitado: #ecedea;
+  --texto-deshabilitado: #8c918e;
+  --borde: #dedfd9; // separadores y contornos de panel
+  --borde-fuerte: #c5c8c1; // separador bajo encabezados
+  --borde-control: #868c88; // borde de campos y botones secundarios (3,4:1)
+
+  // --- Superposiciones y texto invertido ---------------------------------------
+  --texto-invertido: #ffffff; // texto sobre primario, peligro y toasts
+  --hover-sutil: rgba(30, 36, 34, 0.06); // hover de botón neutro
+  --activo-sutil: rgba(30, 36, 34, 0.1);
+  --hover-sobre-vidrio: rgba(255, 255, 255, 0.65); // hover del menú lateral
+  --hover-invertido: rgba(255, 255, 255, 0.08); // hover sobre fondo carbón (toasts)
+  --toast-accion: #cfe3da;
+  --toast-neutro: #cfd4d1;
+  --toast-exito: #9fd1b4;
+  --toast-error: #f2a99f;
+  --toast-info: #a9c6e3;
+
+  // --- Estados semánticos (5 familias) ----------------------------------------
+  // verde terminado · ámbar requiere atención · rojo problema · azul en curso · gris sin acción
+  --exito: #2e6b3f;
+  --exito-bg: #e5f0e7;
+  --exito-borde: #bfdcc6;
+  --adv: #8a5a00;
+  --adv-bg: #fbf0d9;
+  --adv-borde: #eed9a8;
+  --error: #a3322a;
+  --error-hover: #86281f;
+  --error-activo: #6e2019;
+  --error-bg: #fbe8e5;
+  --error-borde: #f0c6bf;
+  --info: #2b5a85;
+  --info-bg: #e7eef5;
+  --info-borde: #c9d8e8;
+
+  // --- Tipografía ---------------------------------------------------------------
+  --f-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --f-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  // Estilos de texto (shorthand de font). Usar vía clases .t-* o var().
+  --t-display: 500 48px/54px var(--f-display);
+  --t-titulo: 500 36px/42px var(--f-display);
+  --t-titulo-movil: 500 28px/34px var(--f-display);
+  --t-seccion: 500 22px/28px var(--f-display);
+  --t-bajada: 400 17px/26px var(--f-display);
+  --t-cifra: 500 34px/40px var(--f-display);
+  --t-panel: 600 15px/20px var(--f-ui);
+  --t-cuerpo: 400 14px/20px var(--f-ui);
+  --t-cuerpo-medio: 500 14px/20px var(--f-ui);
+  --t-etiqueta: 500 13px/16px var(--f-ui);
+  --t-peq: 400 13px/18px var(--f-ui);
+  --t-micro: 500 12px/16px var(--f-ui);
+
+  // --- Espaciado (base 4 px) ------------------------------------------------------
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 20px;
+  --esp-6: 24px;
+  --esp-8: 32px;
+  --esp-10: 40px;
+  --esp-12: 48px;
+  --esp-16: 64px;
+
+  // --- Dimensiones ------------------------------------------------------------------
+  --alto-control-sm: 32px;
+  --alto-control: 36px;
+  --alto-control-lg: 44px; // objetivo táctil mínimo
+  --alto-barra: 56px;
+  --ancho-lateral: 248px;
+  --ancho-contenido: 1280px;
+  --ancho-formulario: 820px;
+  --margen-pagina: var(--esp-8);
+
+  // --- Forma ----------------------------------------------------------------------
+  --r-xs: 2px; // sellos, casillas
+  --r-sm: 4px; // controles
+  --r-md: 6px; // paneles, modales
+  --r-full: 999px; // solo avatares y puntos
+
+  // --- Elevación (solo lo que flota) -------------------------------------------------
+  --sombra-pop: 0 4px 16px rgba(30, 36, 34, 0.12);
+  --sombra-overlay: 0 16px 48px rgba(30, 36, 34, 0.2);
+  --sombra-segmento: 0 1px 2px rgba(30, 36, 34, 0.12);
+  --fondo-overlay: rgba(30, 36, 34, 0.36);
+
+  // --- Foco -----------------------------------------------------------------------------
+  --anillo-foco: 2px solid var(--botella-700);
+  --halo-foco: 0 0 0 3px rgba(34, 73, 61, 0.2);
+  --halo-foco-error: 0 0 0 3px rgba(163, 50, 42, 0.18);
+
+  // --- Movimiento ---------------------------------------------------------------------
+  --t-rapida: 120ms; // hover, presionado, foco
+  --t-media: 180ms; // menús, autocompletar, toasts
+  --t-lenta: 240ms; // modales y drawers
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  // --- Capas ------------------------------------------------------------------------------
+  --z-barra: 10;
+  --z-toast: 1100;
+}
+
+@media (max-width: 959px) {
+  :root {
+    --margen-pagina: var(--esp-4);
+  }
+}

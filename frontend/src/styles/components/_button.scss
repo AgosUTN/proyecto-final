@@ -1,0 +1,139 @@
+// Botones. Se aplican con la directiva [appBtn] (shared/ui/button), que agrega estas clases.
+// Jerarquía: un solo primario por vista. El texto describe la acción ("Crear producto").
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  height: var(--alto-control);
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  font: var(--t-cuerpo-medio);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--t-rapida) var(--ease),
+    border-color var(--t-rapida) var(--ease),
+    color var(--t-rapida) var(--ease);
+
+  &:focus-visible {
+    outline: var(--anillo-foco);
+    outline-offset: 2px;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    background: var(--deshabilitado);
+    border-color: transparent;
+    color: var(--texto-deshabilitado);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.btn--primario {
+  background: var(--botella-700);
+  color: var(--texto-invertido);
+
+  &:hover {
+    background: var(--botella-800);
+    color: var(--texto-invertido);
+  }
+
+  &:active {
+    background: var(--botella-900);
+  }
+}
+
+.btn--secundario {
+  background: var(--superficie);
+  border-color: var(--borde-control);
+  color: var(--carbon-900);
+
+  &:hover {
+    background: var(--lienzo);
+    color: var(--carbon-900);
+  }
+
+  &:active {
+    background: var(--botella-50);
+  }
+}
+
+.btn--terciario {
+  background: transparent;
+  color: var(--botella-700);
+
+  &:hover {
+    background: var(--botella-50);
+    color: var(--botella-900);
+  }
+
+  &:active {
+    background: var(--botella-100);
+  }
+}
+
+.btn--peligro {
+  background: var(--error);
+  color: var(--texto-invertido);
+
+  &:hover {
+    background: var(--error-hover);
+    color: var(--texto-invertido);
+  }
+
+  &:active {
+    background: var(--error-activo);
+  }
+}
+
+// Para íconos sin texto (más acciones, cerrar, menú).
+.btn--neutro {
+  background: transparent;
+  color: var(--carbon-700);
+
+  &:hover {
+    background: var(--hover-sutil);
+    color: var(--carbon-900);
+  }
+
+  &:active {
+    background: var(--activo-sutil);
+  }
+}
+
+.btn--sm {
+  height: var(--alto-control-sm);
+  padding: 0 10px;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.btn--lg {
+  height: var(--alto-control-lg);
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+.btn--icono {
+  width: var(--alto-control);
+  padding: 0;
+
+  &.btn--sm {
+    width: var(--alto-control-sm);
+  }
+
+  &.btn--lg {
+    width: var(--alto-control-lg);
+  }
+}
+
+// Estado de carga: la directiva agrega aria-busy y deshabilita.
+.btn[aria-busy='true'] {
+  cursor: progress;
+}

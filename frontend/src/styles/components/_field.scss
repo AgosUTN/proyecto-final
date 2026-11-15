@@ -1,0 +1,188 @@
+// Campos de formulario: app-campo (etiqueta + control + ayuda + error) y [appInput].
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  position: relative;
+}
+
+.campo__etiqueta {
+  font: var(--t-etiqueta);
+  color: var(--carbon-900);
+}
+
+.campo__req {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+.campo__ayuda {
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.campo__error {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font: var(--t-peq);
+  color: var(--error);
+
+  svg {
+    flex: none;
+    margin-top: 2px;
+  }
+}
+
+.campo__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.campo__prefijo,
+.campo__sufijo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  color: var(--carbon-600);
+  pointer-events: none;
+}
+
+.campo__prefijo {
+  left: 12px;
+}
+
+.campo__sufijo {
+  right: 12px;
+}
+
+.campo__control--prefijo .input {
+  padding-left: 30px;
+}
+
+.campo__control--sufijo .input {
+  padding-right: 36px;
+}
+
+.input {
+  width: 100%;
+  height: var(--alto-control);
+  padding: 0 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde-control);
+  border-radius: var(--r-sm);
+  font: var(--t-cuerpo);
+  color: var(--carbon-900);
+  transition:
+    border-color var(--t-rapida) var(--ease),
+    box-shadow var(--t-rapida) var(--ease);
+
+  &::placeholder {
+    color: var(--carbon-500);
+    opacity: 1;
+  }
+
+  &:hover {
+    border-color: var(--carbon-600);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--botella-700);
+    box-shadow: var(--halo-foco);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--error);
+
+    &:focus {
+      box-shadow: var(--halo-foco-error);
+    }
+  }
+
+  &:disabled {
+    background: var(--deshabilitado);
+    border-color: var(--borde);
+    color: var(--texto-deshabilitado);
+    cursor: not-allowed;
+  }
+
+  &[readonly] {
+    background: var(--arena);
+    border-color: var(--borde);
+  }
+}
+
+// Cifras dentro de campos: alineadas a la derecha y tabulares.
+.input--num {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+textarea.input {
+  height: auto;
+  min-height: 88px;
+  padding: var(--esp-2) 12px;
+  resize: vertical;
+}
+
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23565E5A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.input--sm {
+  height: var(--alto-control-sm);
+}
+
+// Casillas y radios nativos.
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font: var(--t-cuerpo);
+  cursor: pointer;
+
+  input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+    accent-color: var(--botella-700);
+    cursor: pointer;
+  }
+
+  input:disabled,
+  input:disabled + * {
+    color: var(--texto-deshabilitado);
+    cursor: not-allowed;
+  }
+}
+
+.check__detalle {
+  display: block;
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+// Grillas de formulario.
+.form-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: var(--esp-5);
+}
+
+.form-grilla--angosta {
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+}

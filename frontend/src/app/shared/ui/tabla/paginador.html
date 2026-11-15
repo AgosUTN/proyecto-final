@@ -1,0 +1,46 @@
+<span class="num" aria-live="polite">{{ resumen() }}</span>
+<div class="paginador__controles">
+  <label class="paginador__tamanio">
+    Filas por página
+    <select class="input input--sm" (change)="cambiarTamanio($event)">
+      @for (op of opcionesTamanio(); track op) {
+        <option [value]="op" [selected]="op === tamanio()">{{ op }}</option>
+      }
+    </select>
+  </label>
+  <nav class="paginas" aria-label="Paginación">
+    <button
+      class="pagina"
+      type="button"
+      [disabled]="pagina() <= 1"
+      (click)="ir(pagina() - 1)"
+      aria-label="Página anterior"
+    >
+      <app-icono nombre="chevron-izquierda" />
+    </button>
+    @for (item of items(); track item.tipo === 'pagina' ? item.numero : item.id) {
+      @if (item.tipo === 'pagina') {
+        <button
+          class="pagina"
+          type="button"
+          [attr.aria-current]="item.numero === pagina() ? 'page' : null"
+          [attr.aria-label]="'Página ' + item.numero"
+          (click)="ir(item.numero)"
+        >
+          {{ item.numero }}
+        </button>
+      } @else {
+        <span class="paginas__salto t-sec" aria-hidden="true">…</span>
+      }
+    }
+    <button
+      class="pagina"
+      type="button"
+      [disabled]="pagina() >= totalPaginas()"
+      (click)="ir(pagina() + 1)"
+      aria-label="Página siguiente"
+    >
+      <app-icono nombre="chevron-derecha" />
+    </button>
+  </nav>
+</div>

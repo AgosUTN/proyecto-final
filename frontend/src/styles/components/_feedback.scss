@@ -1,0 +1,247 @@
+// Sellos de estado, alertas, toasts, estados vacíos y skeletons.
+
+// --- Sellos -------------------------------------------------------------------
+.sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 var(--esp-2);
+  border-radius: var(--r-xs);
+  font: var(--t-micro);
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--r-full);
+    background: currentColor;
+  }
+}
+
+.sello--exito {
+  background: var(--exito-bg);
+  color: var(--exito);
+}
+
+.sello--adv {
+  background: var(--adv-bg);
+  color: var(--adv);
+}
+
+.sello--error {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.sello--info {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.sello--neutro {
+  background: var(--deshabilitado);
+  color: var(--carbon-700);
+}
+
+.sello--marca {
+  background: var(--botella-100);
+  color: var(--botella-800);
+}
+
+// --- Contador (navegación, pestañas) -------------------------------------------
+.contador {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  font: var(--t-micro);
+  font-variant-numeric: tabular-nums;
+  background: var(--deshabilitado);
+  color: var(--carbon-700);
+}
+
+.contador--adv {
+  background: var(--adv-bg);
+  color: var(--adv);
+}
+
+// --- Alertas en línea ------------------------------------------------------------
+.alerta {
+  display: flex;
+  gap: var(--esp-3);
+  align-items: flex-start;
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid;
+  border-radius: var(--r-md);
+  font: var(--t-cuerpo);
+  color: var(--carbon-900);
+
+  > svg {
+    flex: none;
+    margin-top: 2px;
+  }
+}
+
+.alerta--info {
+  background: var(--info-bg);
+  border-color: var(--info-borde);
+
+  > svg {
+    color: var(--info);
+  }
+}
+
+.alerta--adv {
+  background: var(--adv-bg);
+  border-color: var(--adv-borde);
+
+  > svg {
+    color: var(--adv);
+  }
+}
+
+.alerta--error {
+  background: var(--error-bg);
+  border-color: var(--error-borde);
+
+  > svg {
+    color: var(--error);
+  }
+}
+
+.alerta--exito {
+  background: var(--exito-bg);
+  border-color: var(--exito-borde);
+
+  > svg {
+    color: var(--exito);
+  }
+}
+
+.alerta__titulo {
+  margin-right: 0.3em;
+  font-weight: 600;
+}
+
+// --- Estado vacío -----------------------------------------------------------------
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: var(--esp-10) var(--esp-6);
+  text-align: center;
+}
+
+.vacio__icono {
+  color: var(--carbon-500);
+}
+
+.vacio__titulo {
+  font: var(--t-cuerpo-medio);
+}
+
+.vacio__texto {
+  max-width: 48ch;
+  font: var(--t-peq);
+  color: var(--carbon-600);
+}
+
+.vacio__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--esp-2);
+  margin-top: 6px;
+}
+
+// --- Skeleton: barras planas, sin brillo animado -----------------------------------
+.skeleton {
+  display: block;
+  height: 14px;
+  border-radius: var(--r-xs);
+  background: var(--deshabilitado);
+}
+
+// --- Toasts --------------------------------------------------------------------------
+.toasts {
+  position: fixed;
+  right: var(--esp-6);
+  bottom: var(--esp-6);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  pointer-events: none;
+
+  @media (max-width: 639px) {
+    left: var(--esp-4);
+    right: var(--esp-4);
+    bottom: var(--esp-4);
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-width: 320px;
+  max-width: 420px;
+  padding: var(--esp-3) var(--esp-3) var(--esp-3) var(--esp-4);
+  border-radius: var(--r-md);
+  background: var(--carbon-900);
+  color: var(--texto-invertido);
+  box-shadow: var(--sombra-overlay);
+  font: var(--t-cuerpo);
+  pointer-events: auto;
+  animation: toast-entra var(--t-media) var(--ease);
+
+  @media (max-width: 639px) {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .btn--terciario {
+    color: var(--toast-accion);
+
+    &:hover {
+      background: var(--hover-invertido);
+      color: var(--texto-invertido);
+    }
+  }
+
+  .btn--neutro {
+    color: var(--toast-neutro);
+
+    &:hover {
+      background: var(--hover-invertido);
+      color: var(--texto-invertido);
+    }
+  }
+}
+
+.toast__icono--exito {
+  color: var(--toast-exito);
+}
+
+.toast__icono--error {
+  color: var(--toast-error);
+}
+
+.toast__icono--info {
+  color: var(--toast-info);
+}
+
+.toast__texto {
+  flex: 1;
+}
+
+@keyframes toast-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

@@ -1,0 +1,58 @@
+<div class="sidebar__marca">
+  <div>
+    <span class="sidebar__nombre">{{ nombre }}</span>
+    <span class="sidebar__sub">Bazar, gestión comercial</span>
+  </div>
+  @if (enDrawer) {
+    <button
+      appBoton="neutro"
+      soloIcono
+      type="button"
+      aria-label="Cerrar menú"
+      (click)="drawer?.close()"
+    >
+      <app-icono nombre="cerrar" [tamanio]="18" />
+    </button>
+  }
+</div>
+
+<nav aria-label="Secciones">
+  @for (grupo of menu; track grupo.grupo) {
+    @if (grupo.grupo) {
+      <h2 class="sidebar__grupo">{{ grupo.grupo }}</h2>
+    }
+    <ul>
+      @for (item of grupo.items; track item.ruta) {
+        <li>
+          <a
+            class="sidebar__item"
+            [routerLink]="item.ruta"
+            routerLinkActive
+            [routerLinkActiveOptions]="{ exact: item.ruta === '/ventas' }"
+            ariaCurrentWhenActive="page"
+            (click)="drawer?.close()"
+          >
+            {{ item.etiqueta }}
+          </a>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (desarrollo) {
+    <h2 class="sidebar__grupo">Desarrollo</h2>
+    <ul>
+      <li>
+        <a
+          class="sidebar__item"
+          routerLink="/sistema"
+          routerLinkActive
+          ariaCurrentWhenActive="page"
+          (click)="drawer?.close()"
+        >
+          Sistema de diseño
+        </a>
+      </li>
+    </ul>
+  }
+</nav>

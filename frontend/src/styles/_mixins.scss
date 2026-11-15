@@ -1,0 +1,29 @@
+@use 'sass:map';
+
+// Breakpoints del sistema. Las media queries no aceptan var(), por eso viven acá.
+// Uso en componentes: @use 'mixins' as m;  @include m.hasta(md) { ... }
+$breakpoints: (
+  sm: 640px,
+  md: 960px,
+  lg: 1280px,
+  xl: 1600px,
+);
+
+// Pantallas menores al breakpoint indicado.
+@mixin hasta($bp) {
+  @media (max-width: (map.get($breakpoints, $bp) - 1px)) {
+    @content;
+  }
+}
+
+// Pantallas desde el breakpoint indicado.
+@mixin desde($bp) {
+  @media (min-width: map.get($breakpoints, $bp)) {
+    @content;
+  }
+}
+
+@mixin foco-visible {
+  outline: var(--anillo-foco);
+  outline-offset: 2px;
+}

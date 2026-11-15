@@ -1,0 +1,152 @@
+<app-cabecera
+  titulo="Sistema de diseño"
+  bajada="Componentes compartidos en todos sus estados. Esta página solo existe en desarrollo."
+/>
+
+<div class="guia">
+  <app-panel titulo="Botones">
+    <div class="columna">
+      <div class="fila">
+        <button appBoton="primario" type="button">Primario</button>
+        <button appBoton="secundario" type="button">Secundario</button>
+        <button appBoton="terciario" type="button">Terciario</button>
+        <button appBoton="peligro" type="button">Peligro</button>
+        <button appBoton="neutro" soloIcono type="button" aria-label="Más acciones">
+          <app-icono nombre="mas-acciones" />
+        </button>
+      </div>
+      <div class="fila">
+        <button appBoton="primario" tamanio="sm" type="button">Chico</button>
+        <button appBoton="primario" type="button"><app-icono nombre="mas" />Con ícono</button>
+        <button appBoton="primario" tamanio="lg" type="button">Táctil</button>
+        <button appBoton="primario" type="button" disabled>Deshabilitado</button>
+        <button appBoton="secundario" type="button" cargando>Guardando…</button>
+      </div>
+    </div>
+  </app-panel>
+
+  <app-panel
+    titulo="Campos"
+    variante="seccion"
+    descripcion="Etiqueta siempre visible, ayuda y error."
+  >
+    <div class="form-grilla">
+      <app-campo etiqueta="Obligatorio" obligatorio ayuda="Texto de ayuda.">
+        <input appInput placeholder="Placeholder" />
+      </app-campo>
+      <app-campo
+        etiqueta="Con error"
+        obligatorio
+        error="Descripción del error y del paso siguiente."
+      >
+        <input appInput value="Valor inválido" />
+      </app-campo>
+      <app-campo etiqueta="Importe" prefijo="$">
+        <input appInput="num" inputmode="decimal" value="0" />
+      </app-campo>
+      <app-campo etiqueta="Deshabilitado">
+        <input appInput value="Sin edición" disabled />
+      </app-campo>
+      <app-campo etiqueta="Solo lectura" ayuda="Se calcula solo.">
+        <input appInput="num" value="0" readonly />
+      </app-campo>
+      <app-campo etiqueta="Lista">
+        <select appInput>
+          <option>Primera opción</option>
+          <option>Segunda opción</option>
+        </select>
+      </app-campo>
+      <app-campo
+        etiqueta="Autocompletar"
+        ayuda="Las opciones provienen del componente que lo utiliza."
+      >
+        <app-autocompletar
+          [formControl]="controlAuto"
+          [opciones]="opcionesAuto()"
+          (busqueda)="filtrar($event)"
+          permitirCrear
+        />
+      </app-campo>
+      <app-campo etiqueta="Texto largo">
+        <textarea appInput placeholder="Hasta 2.000 caracteres."></textarea>
+      </app-campo>
+      <div class="columna">
+        <span class="t-etiqueta">Casillas</span>
+        <label class="check"><input type="checkbox" checked /><span>Activa</span></label>
+        <label class="check">
+          <input type="checkbox" disabled />
+          <span>Deshabilitada<span class="check__detalle">Con detalle debajo.</span></span>
+        </label>
+      </div>
+    </div>
+  </app-panel>
+
+  <app-panel titulo="Selectores y filtros">
+    <div class="columna">
+      <app-pestanas etiqueta="Ejemplo de pestañas" [opciones]="pestanas" [(seleccion)]="pestana" />
+      <div class="fila">
+        <app-segmentado etiqueta="Período" [opciones]="periodos" [(valor)]="periodo" />
+        <button class="filtro" type="button">
+          <span class="filtro__nombre">Filtro</span>Todos<app-icono nombre="chevron-abajo" />
+        </button>
+        <app-chip-filtro>Filtro aplicado</app-chip-filtro>
+      </div>
+    </div>
+  </app-panel>
+
+  <app-panel titulo="Sellos y alertas">
+    <div class="columna">
+      <div class="fila">
+        <app-sello tono="exito">Terminado</app-sello>
+        <app-sello tono="adv">Requiere atención</app-sello>
+        <app-sello tono="error">Problema</app-sello>
+        <app-sello tono="info">En curso</app-sello>
+        <app-sello tono="neutro">Sin acción</app-sello>
+        <app-sello tono="marca">Atributo de cliente</app-sello>
+      </div>
+      <app-alerta tono="info">Alerta informativa en línea.</app-alerta>
+      <app-alerta tono="adv" titulo="Atención."
+        >Situación que requiere revisión antes de continuar.</app-alerta
+      >
+      <app-alerta tono="error" titulo="Operación no completada."
+        >Motivo del error y paso siguiente.</app-alerta
+      >
+      <div class="fila">
+        <button appBoton="secundario" type="button" (click)="toast()">Mostrar toast</button>
+        <button appBoton="secundario" type="button" (click)="confirmar()">
+          Abrir confirmación
+        </button>
+        <button appBoton="secundario" type="button" (click)="drawer()">Abrir drawer</button>
+      </div>
+    </div>
+  </app-panel>
+
+  <app-tabla
+    etiqueta="Tabla de ejemplo"
+    [columnas]="columnas"
+    [filas]="filas"
+    [claveFila]="claveFila"
+    [cargando]="cargando()"
+    seleccionable
+    [(orden)]="orden"
+  >
+    <div tabla-herramientas class="tabla-herramientas">
+      <span class="t-panel" style="margin-right: auto">Tabla</span>
+      <button appBoton="secundario" tamanio="sm" type="button" (click)="cargando.set(!cargando())">
+        {{ cargando() ? 'Ver vacía' : 'Ver cargando' }}
+      </button>
+    </div>
+    <app-estado-vacio
+      tabla-vacia
+      titulo="Sin registros"
+      texto="Los registros se mostrarán cuando la API devuelva datos."
+    >
+      <button vacio-acciones appBoton="terciario" type="button">
+        <app-icono nombre="mas" />Crear registro
+      </button>
+    </app-estado-vacio>
+    <app-paginador tabla-pie [total]="0" [(pagina)]="pagina" [(tamanio)]="tamanio" />
+  </app-tabla>
+
+  <app-panel titulo="Skeleton"><app-skeleton /></app-panel>
+</div>
