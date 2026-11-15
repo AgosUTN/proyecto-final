@@ -733,9 +733,8 @@ features/inventario/stock/
 |---|---|---|
 | Stores, pipes, guards, mapeo de errores, `PageQuery` | Vitest | Obligatorio para todo lo nuevo en `core` y `shared/data-access` |
 | Componentes de `shared/ui` críticos (`tabla`, `sello`, `campo`) | Vitest + Angular Testing Library | Comportamiento visible, no detalles internos |
-| Flujos completos | Playwright | Inicio de sesión, alta de producto con variante, venta en mostrador |
 
-Los archivos `.spec.ts` vacíos no se commitean.
+No se escriben tests end to end. Los archivos `.spec.ts` vacíos no se commitean.
 
 ---
 
