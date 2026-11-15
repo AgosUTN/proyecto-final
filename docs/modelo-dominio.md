@@ -584,10 +584,20 @@ cada endpoint verifica si el usuario tiene el permiso que la ruta exige, nunca e
 | `nombre` | String | sí | Definido por el administrador |
 | `descripcion` | String | sí |  |
 | `permisos` | JSON | sí | Array de códigos del catálogo de permisos del sistema (los que exigen los endpoints) |
+| `activo` | Boolean | sí | Baja lógica: falso cuando se elimina un rol cuyos usuarios están todos inactivos |
 
 **Relaciones**
 
 - `USUARIO`: cada `ROL` se asocia con 0..N `USUARIO`; cada `USUARIO` se asocia con 1 `ROL`.
+
+**Baja**
+
+- Sin usuarios: baja física.
+- Solo con usuarios inactivos: baja lógica (`activo` en falso).
+- Con al menos un usuario activo: la baja se rechaza; primero se reasignan esos usuarios a otro rol.
+- El último rol activo con el permiso `usuarios:administrar` que tenga usuarios activos no se da de baja ni pierde ese
+  permiso, para que el sistema no quede sin administrador.
+- Un rol inactivo no se asigna a usuarios y no otorga permisos.
 
 ### CLIENTE_MINORISTA
 

@@ -404,7 +404,9 @@ utiliza.
 - `requirePermission('stock:ajustar')` se declara en cada ruta y responde 403 si el usuario no tiene el permiso.
   La autorización verifica permisos, nunca el nombre del rol.
 - Los roles son un maestro más: el administrador los crea con un nombre y los permisos que elige (`ROL.permisos`
-  en el modelo de dominio). No existen roles fijos en el código.
+  en el modelo de dominio). No existen roles fijos en el código. Un rol inactivo no otorga permisos: la sesión sigue
+  siendo válida, pero `requirePermission` responde 403 y `/auth/me` devuelve la lista de permisos vacía.
+- El primer usuario lo crea el backend al arrancar (administrador inicial, sección 7.5).
 - El catálogo de permisos, es decir, los que exigen los endpoints, vive en `shared/auth/permisos.ts` y es la misma
   lista que usa el frontend (tipo `Permiso` de `frontend/src/app/core/auth/roles.ts`). `/auth/me` devuelve los
   permisos del usuario para que el frontend no tenga que deducirlos.
@@ -429,8 +431,8 @@ utiliza.
 
 El servicio decide en `eliminar()`. Todos los maestros siguen el mismo criterio:
 
-1. **Si una regla de negocio impide la baja** (por ejemplo, RNS-CAT-09: categoría con subcategorías): 409 con el
-   código de esa regla.
+1. **Si una regla de negocio impide la baja** (por ejemplo, RNS-CAT-09: categoría con subcategorías; o un rol con
+   usuarios activos, según el modelo de dominio): 409 con el código de esa regla.
 2. **Maestro utilizado**, es decir, con al menos un registro de otra entidad que lo referencia (por ejemplo, una
    categoría con productos, RNS-CAT-10): baja lógica (`activo = false`). Los listados la ocultan salvo con
    `incluirInactivos=true`.
@@ -441,7 +443,9 @@ La respuesta informa qué baja se aplicó, para que el frontend muestre «elimin
 ### 7.3 Transacciones y concurrencia
 
 - Cada request usa su propio `EntityManager` (`RequestContext`). Los servicios lo obtienen con `em()`.
-- Toda operación que escribe más de una entidad se ejecuta dentro de `em().transactional(...)`.
+- Toda operación que escribe más de una entidad se ejecuta dentro de `em().transactional(...)`. Dentro del callback,
+  `em()` devuelve el EntityManager de la transacción, de modo que los servicios de otros módulos que se llamen ahí
+  participan de ella.
 - Las operaciones sobre stock bloquean la fila (`LockMode.PESSIMISTIC_WRITE`) para evitar ventas simultáneas de
   la misma unidad.
 
@@ -459,6 +463,10 @@ atributos de `OBJETO_AUDITORIA` que requiere.
 - El esquema se sincroniza al arrancar con `orm.schema.update({ safe: true })`: crea tablas y columnas, pero no
   borra. Para sumar una entidad alcanza con registrarla en `ENTIDADES` (sección 2.3).
 - Por ahora no se usan migraciones ni seeders.
+- Única excepción, el **administrador inicial**: al arrancar, si la tabla `usuario` está vacía, el backend crea el rol
+  «Administrador» con todos los permisos del catálogo y el usuario definido por `ADMIN_USUARIO`, `ADMIN_EMAIL` y
+  `ADMIN_CONTRASENA`. Si ya existen usuarios, no hace nada; si faltan esas variables, lo informa en el log. Cada
+  entorno define las suyas en `.env`: ninguna credencial queda en el repositorio.
 
 ---
 
@@ -491,8 +499,8 @@ atributos de `OBJETO_AUDITORIA` que requiere.
 - Límite de tamaño del body (`express.json({ limit: '1mb' })`); la subida de archivos se define con su propio
   límite cuando exista.
 - Límite de intentos en `POST /api/auth/login` (`express-rate-limit`, sección 6.2).
-- Variables de entorno validadas en `config/env.ts` (por ejemplo, `JWT_SECRET` de al menos 32 caracteres); los
-  secretos solo viven en `.env`, que no se versiona.
+- Variables de entorno validadas en `config/env.ts` (por ejemplo, `JWT_SECRET` de al menos 32 caracteres; las
+  `ADMIN_*` son opcionales, sección 7.5); los secretos solo viven en `.env`, que no se versiona.
 
 ---
 
