@@ -1,17 +1,29 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from '@core/auth/permission.guard';
 
-// Pantalla provisoria hasta implementar la feature: reemplazar loadComponent por './pages/<pagina>'.
 export default [
   {
     path: '',
     canActivate: [permissionGuard('parametros:editar')],
-    title: 'Categorías',
-    data: {
-      breadcrumb: 'Categorías',
-      titulo: 'Categorías',
-      descripcion: 'Árbol de categorías del catálogo.',
-    },
-    loadComponent: () => import('@shared/ui/pagina-pendiente/pagina-pendiente'),
+    data: { breadcrumb: 'Categorías' },
+    children: [
+      {
+        path: '',
+        title: 'Categorías',
+        loadComponent: () => import('./pages/categorias-page'),
+      },
+      {
+        path: 'nueva',
+        title: 'Nueva categoría',
+        data: { breadcrumb: 'Nueva categoría' },
+        loadComponent: () => import('./pages/categoria-form-page'),
+      },
+      {
+        path: ':id',
+        title: 'Editar categoría',
+        data: { breadcrumb: 'Editar categoría' },
+        loadComponent: () => import('./pages/categoria-form-page'),
+      },
+    ],
   },
 ] satisfies Routes;

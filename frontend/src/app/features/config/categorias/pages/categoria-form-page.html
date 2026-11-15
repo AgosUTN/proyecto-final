@@ -1,0 +1,74 @@
+<app-cabecera [titulo]="titulo()" [bajada]="noEncontrada() ? null : bajada()" />
+
+@if (noEncontrada()) {
+  <div class="panel">
+    <app-estado-vacio
+      icono="alerta"
+      titulo="La categoría solicitada no existe"
+      texto="Es posible que se haya eliminado. Volver al listado para seleccionar otra."
+    >
+      <a vacio-acciones appBoton="secundario" routerLink="/config/categorias">Ir a categorías</a>
+    </app-estado-vacio>
+  </div>
+} @else if (errorCarga(); as mensaje) {
+  <div class="panel">
+    <app-estado-vacio icono="alerta" titulo="No fue posible cargar la categoría" [texto]="mensaje">
+      <button vacio-acciones appBoton="secundario" type="button" (click)="detalle.reload()">
+        Reintentar
+      </button>
+    </app-estado-vacio>
+  </div>
+} @else {
+  <form class="formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <app-panel
+      titulo="Datos generales"
+      variante="seccion"
+      descripcion="Cómo se identifica la categoría en el catálogo y en la tienda."
+    >
+      @if (edicion() && detalle.isLoading()) {
+        <app-skeleton [anchos]="['70%', '45%', '90%']" />
+      } @else {
+        <div class="formulario__campos">
+          @if (errorAccion(); as mensaje) {
+            <app-alerta tono="error" rol="alert" titulo="La categoría no se guardó.">{{
+              mensaje
+            }}</app-alerta>
+          }
+
+          <app-campo etiqueta="Nombre" obligatorio [error]="errorDe('nombre')">
+            <input appInput formControlName="nombre" maxlength="80" autocomplete="off" />
+          </app-campo>
+
+          <app-campo
+            etiqueta="Categoría padre"
+            ayuda="Sin categoría padre, la categoría queda en el primer nivel del catálogo."
+            [error]="errorDe('padreId')"
+          >
+            <app-autocompletar
+              formControlName="padreId"
+              placeholder="Buscar categoría"
+              [opciones]="opcionesPadre()"
+              (busqueda)="buscarPadre($event)"
+            />
+          </app-campo>
+
+          <app-campo
+            etiqueta="Descripción"
+            obligatorio
+            ayuda="Hasta 255 caracteres."
+            [error]="errorDe('descripcion')"
+          >
+            <textarea appInput formControlName="descripcion" rows="4" maxlength="255"></textarea>
+          </app-campo>
+        </div>
+      }
+    </app-panel>
+
+    <app-barra-acciones [aviso]="aviso()">
+      <a appBoton="terciario" routerLink="/config/categorias">Cancelar</a>
+      <button appBoton="primario" type="submit" [cargando]="guardando()">
+        {{ edicion() ? 'Guardar cambios' : 'Crear categoría' }}
+      </button>
+    </app-barra-acciones>
+  </form>
+}

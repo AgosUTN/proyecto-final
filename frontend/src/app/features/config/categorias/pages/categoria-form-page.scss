@@ -1,0 +1,9 @@
+.formulario {
+  max-width: var(--ancho-formulario);
+}
+
+.formulario__campos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}

@@ -1,0 +1,89 @@
+<app-cabecera titulo="Categorías" [bajada]="bajada()">
+  <a cabecera-acciones appBoton="primario" routerLink="nueva">
+    <app-icono nombre="mas" />Nueva categoría
+  </a>
+</app-cabecera>
+
+<app-tabla
+  etiqueta="Categorías del catálogo"
+  [columnas]="columnas"
+  [filas]="filas()"
+  [claveFila]="claveFila"
+  [cargando]="lista.isLoading() && !lista.hasValue()"
+  [orden]="orden()"
+  (ordenChange)="ordenar($event)"
+>
+  <div tabla-herramientas class="tabla-herramientas">
+    <label class="sr-only" for="buscar-categorias">Buscar categorías por nombre</label>
+    <input
+      id="buscar-categorias"
+      class="categorias__buscar"
+      appInput
+      type="search"
+      placeholder="Buscar por nombre"
+      autocomplete="off"
+      [value]="texto()"
+      (input)="buscar($event)"
+    />
+  </div>
+
+  @if (errorAccion(); as mensaje) {
+    <div tabla-herramientas class="categorias__aviso">
+      <app-alerta tono="error" rol="alert" titulo="La acción no se completó.">{{ mensaje }}</app-alerta>
+    </div>
+  }
+
+  <ng-template appCelda="padre" let-c>
+    @if (c.padre) {
+      {{ c.padre }}
+    } @else {
+      <span class="t-sec">Categoría raíz</span>
+    }
+  </ng-template>
+
+  <ng-template appAccionesFila let-c>
+    <app-menu-acciones [etiqueta]="'Acciones de ' + c.nombre" [acciones]="acciones().get(c.id) ?? []" />
+  </ng-template>
+
+  @if (errorCarga(); as mensaje) {
+    <app-estado-vacio
+      tabla-vacia
+      icono="alerta"
+      titulo="No fue posible cargar las categorías"
+      [texto]="mensaje"
+    >
+      <button vacio-acciones appBoton="secundario" type="button" (click)="lista.reload()">
+        Reintentar
+      </button>
+    </app-estado-vacio>
+  } @else if (query().q) {
+    <app-estado-vacio
+      tabla-vacia
+      titulo="Ninguna categoría coincide con «{{ query().q }}»"
+      texto="Ajustar la búsqueda o quitarla para ver todas las categorías."
+    >
+      <button vacio-acciones appBoton="secundario" type="button" (click)="quitarBusqueda()">
+        Quitar búsqueda
+      </button>
+    </app-estado-vacio>
+  } @else {
+    <app-estado-vacio
+      tabla-vacia
+      titulo="Crear la primera categoría del catálogo"
+      texto="Las categorías organizan los productos en el sistema y en la tienda."
+    >
+      <a vacio-acciones appBoton="secundario" routerLink="nueva">
+        <app-icono nombre="mas" />Nueva categoría
+      </a>
+    </app-estado-vacio>
+  }
+
+  <app-paginador
+    tabla-pie
+    [total]="total()"
+    [pagina]="query().pagina"
+    (paginaChange)="query.actualizar({ pagina: $event })"
+    [tamanio]="query().tamanio"
+    (tamanioChange)="query.actualizar({ tamanio: $event })"
+  />
+</app-tabla>
