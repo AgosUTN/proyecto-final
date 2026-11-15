@@ -226,7 +226,7 @@ frontend/src/
    │  ├─ auth/                 auth.store.ts · auth.api.ts · auth.guard.ts · permission.guard.ts
    │  │                        permisos.ts · can.directive.ts
    │  ├─ http/                 api-base.interceptor.ts · credentials.interceptor.ts · error.interceptor.ts
-   │  │                        api.types.ts · api-error.ts · error-catalog.ts
+   │  │                        api-error.ts · error-catalog.ts · generated/ (tipos del contrato OpenAPI)
    │  ├─ navigation/           feature.types.ts · navegacion.ts · breadcrumbs.ts
    │  ├─ formatters/           ars.pipe.ts · porcentaje.pipe.ts · fecha.pipe.ts (es-AR)
    │  └─ estados/              estados.ts (estado backend → texto y tono de <app-sello>)
@@ -238,7 +238,7 @@ frontend/src/
    │  ├─ ui/                   boton · campo · autocompletar · tabla · paginador · estructura
    │  │                        (cabecera, panel, cifras) · estados (sello, alerta, estado-vacio,
    │  │                        skeleton) · selectores · dialogo · toast · icono · pagina-pendiente
-   │  ├─ data-access/          crud-api.ts · page-query.ts
+   │  ├─ data-access/          api.types.ts (Respuesta, Paginado, Baja) · crud-api.ts · page-query.ts
    │  └─ forms/                validators/ · server-errors.ts
    │
    └─ features/
@@ -274,7 +274,9 @@ frontend/src/
 
 Las rutas son las de la sección 6. La cabecera de página (`app-cabecera`) vive en `shared/ui` y no en `layout/`,
 porque las features la usan y no pueden importar `layout` (sección 5.3). Las notificaciones son `ToastService`,
-en `shared/ui`.
+en `shared/ui`. Por la misma regla, las formas comunes de respuesta (`Respuesta`, `Paginado`, `Baja`) viven en
+`shared/data-access`, donde las usa `crudApi`; y `applyServerErrors` recibe un tipo estructural mínimo que el
+`ApiError` de `core/http` cumple sin que `shared` lo importe.
 
 Estructura interna de cada feature:
 
