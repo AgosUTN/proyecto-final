@@ -90,14 +90,19 @@ export function pageQueryDesdeUrl(defaults: Partial<PageQuery> = {}): PageQueryS
   const params = toSignal(ruta.queryParamMap, { initialValue: ruta.snapshot.queryParamMap });
   const consulta = computed(() => consultaDesdeParams(params(), defaults));
 
+  // Consulta pedida cuya navegación todavía no terminó. Dos cambios seguidos (el paginador emite el tamaño y luego
+  // la página 1) se acumulan sobre ella y no sobre la URL anterior.
+  let pendiente: PageQuery | null = null;
+
   const actualizar = (cambios: Partial<PageQuery>) => {
     const vuelveAlInicio = ['q', 'orden', 'direccion', 'tamanio', 'filtros'].some((c) => c in cambios);
-    const nueva = { ...consulta(), ...(vuelveAlInicio ? { pagina: 1 } : {}), ...cambios };
-    void router.navigate([], {
-      relativeTo: ruta,
-      queryParams: paramsDeUrl(nueva, defaults),
-      replaceUrl: 'q' in cambios,
-    });
+    const nueva = { ...(pendiente ?? consulta()), ...(vuelveAlInicio ? { pagina: 1 } : {}), ...cambios };
+    pendiente = nueva;
+    void router
+      .navigate([], { relativeTo: ruta, queryParams: paramsDeUrl(nueva, defaults), replaceUrl: 'q' in cambios })
+      .finally(() => {
+        if (pendiente === nueva) pendiente = null;
+      });
   };
 
   return Object.assign(consulta, { actualizar });

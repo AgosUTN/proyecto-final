@@ -50,6 +50,18 @@ describe('PageQuery', () => {
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/lista?pagina=2&q=copa');
   });
+
+  it('acumula dos cambios seguidos aunque la primera navegación no haya terminado', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'lista', component: Listado }])] });
+    const harness = await RouterTestingHarness.create();
+    const listado = await harness.navigateByUrl('/lista?pagina=5', Listado);
+
+    // Como el paginador al cambiar el tamaño: primero el tamaño y enseguida la página 1
+    listado.query.actualizar({ tamanio: 50 });
+    listado.query.actualizar({ pagina: 1 });
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/lista?tamanio=50');
+  });
 });
 
 describe('crudApi', () => {
