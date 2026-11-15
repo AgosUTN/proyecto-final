@@ -15,6 +15,9 @@ export function respuestaDatos<T extends ZodType>(esquema: T) {
   return z.object({ datos: esquema });
 }
 
+/** Resultado de un `DELETE`: qué baja se aplicó (convenciones, sección 7.2). */
+export const bajaDto = z.object({ baja: z.enum(['fisica', 'logica']) }).meta({ id: 'Baja' });
+
 /** Respuesta de un listado paginado: `{ datos, total, pagina, tamanio }`. */
 export function respuestaPagina<T extends ZodType>(fila: T) {
   return z.object({
